@@ -36,10 +36,6 @@
 
   <p align="center">
     Better stored procedure management
-    <br />
-    <a href="https://github.com/nicklausroach/sprocketship"><strong>Explore the docs »</strong></a>
-    <br />
-    <br />
   </p>
 </div>
 
