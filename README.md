@@ -29,7 +29,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/nicklausroach/sprocketship" style="font-size: 30px">
+  <a href="https://github.com/nicklausroach/sprocketship" style="font-size: 30px; text-decoration: none;">
     ⚙️ 🚀
   </a>
 <h3 align="center">Sprocketship</h3>
@@ -62,11 +62,7 @@
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
   </ol>
 </details>
 
@@ -91,6 +87,8 @@
 
 
 <!-- GETTING STARTED -->
+## Getting Started
+
 ### Installation
 
 `pip install sprocketship`
