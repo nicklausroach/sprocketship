@@ -140,6 +140,8 @@ procedures:
       ...
 ```
 
+From here, simply run `sprocketship liftoff` from the project directory (or provide the directory, e.g. `sprocketship liftoff my/directory/path`) and sprocketship will launch your stored procedures into the given directory. 
+
 <!-- LICENSE -->
 ## License
 

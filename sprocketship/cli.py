@@ -57,7 +57,7 @@ AS '
 
 @click.command()
 @click.argument("subcommand", type=click.Choice(["liftoff"]))
-@click.option("--dir", default=".")
+@click.argument("dir", default=".")
 def main(subcommand, dir):
     if subcommand == "liftoff":
         click.echo(click.style(f"🚀 Sprocketship lifting off!", fg='white', bold=True))
