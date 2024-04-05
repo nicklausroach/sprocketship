@@ -75,7 +75,7 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-`sprocketship` makes it easy to develop, manage, and deploy stored procedures in snowflake. Using the language of your choosing, you can write the contents of your stored procedure separately from its configurations (e.g., `EXECUTE AS`, `RETURN TYPE`, etc.). 
+`sprocketship` makes it easy to develop, manage, and deploy stored procedures in Snowflake. Using the language of your choosing, you can write the contents of your stored procedure separately from its configurations (e.g., `EXECUTE AS`, `RETURN TYPE`, etc.). 
 
 
 
@@ -100,12 +100,45 @@
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+Currently, sprocketship expects a `.sprocketship.yml` file and a `procedures/` directory at the same level in a directory structure.
 
-_For more examples, please refer to the [Documentation](https://example.com)_
+```
+├── dbt_models
+│   ├── customers.sql
+│   ├── products.sql
+├── procedures
+│   ├── admin
+│   │   ├── create_database_writer_role.js
+│   │   ├── create_database_reader_role.js
+│   ├── development
+│   │   ├── create_temp_database.js
+└── .sprocketship.yml
+```
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+The yaml path to each procedure in the `sprocketship.yml` should follow that of the paths to their corresponding files in the `procedures/` directory. 
 
+```
+procedures:
+  development:
+    - name: create_temp_database
+      replace_if_exists: true
+      database: {{ env.get('SNOWFLAKE_DATABASE') }}
+      schema: {{ env.get('SNOWFLAKE_SCHEMA') }}
+      ...
+
+  admin:
+    - name: create_database_reader
+      replace_if_exists: true
+      database: {{ env.get('SNOWFLAKE_DATABASE') }}
+      schema: {{ env.get('SNOWFLAKE_SCHEMA') }}
+      ...
+
+    - name: create_database_writer
+      replace_if_exists: true
+      database: {{ env.get('SNOWFLAKE_DATABASE') }}
+      schema: {{ env.get('SNOWFLAKE_SCHEMA') }}
+      ...
+```
 
 <!-- LICENSE -->
 ## License

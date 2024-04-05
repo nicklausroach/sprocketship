@@ -64,7 +64,7 @@ def main(subcommand, dir):
         # Open config in current directory
 
         yaml = YAML(typ='safe')
-        with open(os.path.join(dir, '.sprocketship.yaml'), 'r') as file:
+        with open(os.path.join(dir, '.sprocketship.yml'), 'r') as file:
             data = yaml.load(Environment().from_string(file.read()).render(env=os.environ))
 
         con = connector.connect(**data["snowflake"])
