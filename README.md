@@ -140,6 +140,32 @@ From here, simply run
 
 from the project directory (or provide the directory, e.g. `sprocketship liftoff my/directory/path`) and sprocketship will launch your stored procedures into the given directory. 
 
+### Exhaustive Options for Stored Procedure Configuration
+
+```
+name: The name of the procedure
+replace_if_exists: Boolean, inserts `OR REPLACE` into the create command
+database: The name of the database where the procedure will be stored
+schema: The name of the schema where the procedure will be stored
+language: The language of the procedure definition
+execute_as: caller or owner
+args:
+    arg_name: arg_type
+returns: The return type
+comment: Explanation of the procedure
+```
+
+## Support
+
+sprocketship currently only supports Javascript-based stored procedures (Python support coming soon!). Additionally, there are a few options from the `CREATE STORED PROCEDURE` function that are not yet supported:
+
+* `<arg-name> <arg-type> DEFAULT <default-value>`
+* `COPY GRANTS`
+* `RETURNS <result-data-type> NOT NULL`
+* `CALLED ON NULL INPUT | { RETURNS NULL ON NULL INPUT | STRICT }`
+* `VOLATILE | IMMUTABLE` (deprecated)
+
+
 <!-- LICENSE -->
 ## License
 
