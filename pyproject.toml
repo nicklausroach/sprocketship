@@ -8,6 +8,7 @@ version = "0.0.1"
 authors = [
   { name="Nicklaus Roacb", email="nicklausroach@gmail.com" },
 ]
+readme = "README.md"
 dependencies = [
     "click",
     "snowflake",
