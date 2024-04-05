@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sprocketship"
+version = "0.0.1"
+authors = [
+  { name="Nicklaus Roacb", email="nicklausroach@gmail.com" },
+]
+dependencies = [
+    "click",
+    "snowflake",
+    "ABSQL",
+    "ruamel",
+    "jinja2"
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.scripts]
+sprocketship = "sprocketship.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/nicklausroach/sprocketship"
+Issues = "https://github.com/pypa/nicklausroach/sprocketship"
