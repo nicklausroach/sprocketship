@@ -29,7 +29,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/nicklausroach/sprocketship" style="font-size: 30px; text-decoration: none;">
+  <a href="https://github.com/nicklausroach/sprocketship" style="font-size: 60px; text-decoration: none;">
     ⚙️ 🚀
   </a>
 <h3 align="center">Sprocketship</h3>
@@ -115,20 +115,17 @@ The yaml path to each procedure in the `sprocketship.yml` should follow that of 
 procedures:
   development:
     - name: create_temp_database
-      replace_if_exists: true
       database: !env_var SNOWFLAKE_DATABASE
       schema: !env_var SNOWFLAKE_SCHEMA
       ...
 
   admin:
     - name: create_database_reader
-      replace_if_exists: true
       database: !env_var SNOWFLAKE_DATABASE
       schema: !env_var SNOWFLAKE_SCHEMA
       ...
 
     - name: create_database_writer
-      replace_if_exists: true
       database: !env_var SNOWFLAKE_DATABASE
       schema: !env_var SNOWFLAKE_SCHEMA
       ...
