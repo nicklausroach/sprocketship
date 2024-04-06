@@ -1,7 +1,8 @@
 var databaseName = DATABASE_NAME;
-var roleName = ROLE_NAME;
+var roleName = `${databaseName}_WRITER`;
 
 var sqlCommands = [
+    `CREATE OR REPLACE ROLE ${roleName}`
     `GRANT OWNERSHIP ON DATABASE ${databaseName} TO ROLE ${roleName}  REVOKE CURRENT GRANTS;`,
     `GRANT OWNERSHIP ON ALL TABLES IN DATABASE ${databaseName} TO ROLE ${roleName}  REVOKE CURRENT GRANTS;`,
     `GRANT OWNERSHIP ON ALL VIEWS IN DATABASE ${databaseName} TO ROLE ${roleName}  REVOKE CURRENT GRANTS;`,
@@ -17,4 +18,4 @@ var sqlCommands = [
 
 var resultSet = sqlCommands.map(command => snowflake.execute({sqlText: command}));
 
-return "Permissions granted successfully.";
+return "Writer created successfully.";

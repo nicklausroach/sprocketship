@@ -116,21 +116,21 @@ procedures:
   development:
     - name: create_temp_database
       replace_if_exists: true
-      database: {{ env.get('SNOWFLAKE_DATABASE') }}
-      schema: {{ env.get('SNOWFLAKE_SCHEMA') }}
+      database: !env_var SNOWFLAKE_DATABASE
+      schema: !env_var SNOWFLAKE_SCHEMA
       ...
 
   admin:
     - name: create_database_reader
       replace_if_exists: true
-      database: {{ env.get('SNOWFLAKE_DATABASE') }}
-      schema: {{ env.get('SNOWFLAKE_SCHEMA') }}
+      database: !env_var SNOWFLAKE_DATABASE
+      schema: !env_var SNOWFLAKE_SCHEMA
       ...
 
     - name: create_database_writer
       replace_if_exists: true
-      database: {{ env.get('SNOWFLAKE_DATABASE') }}
-      schema: {{ env.get('SNOWFLAKE_SCHEMA') }}
+      database: !env_var SNOWFLAKE_DATABASE
+      schema: !env_var SNOWFLAKE_SCHEMA
       ...
 ```
 

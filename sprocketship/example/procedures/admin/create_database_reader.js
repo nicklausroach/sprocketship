@@ -1,7 +1,8 @@
 var databaseName = DATABASE_NAME;
-var roleName = ROLE_NAME;
+var roleName = `${databaseName}_READER`;
 
 var sqlCommands = [
+    `CREATE OR REPLACE ROLE ${roleName}`
     `GRANT USAGE ON DATABASE ${databaseName} TO ROLE ${roleName}  REVOKE CURRENT GRANTS;`,
     `GRANT USAGE ON ALL SCHEMAS IN DATABASE ${databaseName} TO ROLE ${roleName}  REVOKE CURRENT GRANTS;`,
     `GRANT USAGE ON ALL FUTURE SCHEMAS IN DATABASE ${databaseName} TO ROLE ${roleName}  REVOKE CURRENT GRANTS;`,
@@ -13,4 +14,4 @@ var sqlCommands = [
 
 var resultSet = sqlCommands.map(command => snowflake.execute({sqlText: command}));
 
-return "Permissions granted successfully.";
+return "Reader created successfully.";

@@ -2,7 +2,7 @@ import click
 import os
 import itertools
 from snowflake import connector
-from absql import render_text
+from absql import render_text, render_file
 from jinja2 import Environment
 from ruamel.yaml import YAML
 
@@ -63,9 +63,7 @@ def main(subcommand, dir):
         click.echo(click.style(f"🚀 Sprocketship lifting off!", fg='white', bold=True))
         # Open config in current directory
 
-        yaml = YAML(typ='safe')
-        with open(os.path.join(dir, '.sprocketship.yml'), 'r') as file:
-            data = yaml.load(Environment().from_string(file.read()).render(env=os.environ))
+        data = render_file(os.path.join(dir, '.sprocketship.yml'), return_dict=True)
 
         con = connector.connect(**data["snowflake"])
 

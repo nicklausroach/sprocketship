@@ -1,16 +1,16 @@
 snowflake:
-  account: {{ env.get('SNOWFLAKE_ACCOUNT') }}
-  user: {{ env.get('SNOWFLAKE_USER') }}
-  password: {{ env.get('SNOWFLAKE_PASSWORD') }}
-  role: {{ env.get('SNOWFLAKE_ROLE') }}
-  warehouse: {{ env.get('SNOWFLAKE_WAREHOUSE') }}
+  account: !env_var SNOWFLAKE_ACCOUNT
+  user: !env_var SNOWFLAKE_USER
+  password: !env_var SNOWFLAKE_PASSWORD
+  role: !env_var SNOWFLAKE_ROLE
+  warehouse: !env_var SNOWFLAKE_WAREHOUSE
 
 procedures:
   development:
     - name: create_temp_database
       replace_if_exists: true
-      database: {{ env.get('SNOWFLAKE_DATABASE') }}
-      schema: {{ env.get('SNOWFLAKE_SCHEMA') }}
+      database: !env_var SNOWFLAKE_DATABASE
+      schema: !env_var SNOWFLAKE_SCHEMA
       language: javascript
       execute_as: caller
       args:
@@ -24,8 +24,8 @@ procedures:
   admin:
     - name: create_database_reader
       replace_if_exists: true
-      database: {{ env.get('SNOWFLAKE_DATABASE') }}
-      schema: {{ env.get('SNOWFLAKE_SCHEMA') }}
+      database: !env_var SNOWFLAKE_DATABASE
+      schema: !env_var SNOWFLAKE_SCHEMA
       language: javascript
       execute_as: owner
       args:
@@ -36,8 +36,8 @@ procedures:
 
     - name: create_database_writer
       replace_if_exists: true
-      database: {{ env.get('SNOWFLAKE_DATABASE') }}
-      schema: {{ env.get('SNOWFLAKE_SCHEMA') }}
+      database: !env_var SNOWFLAKE_DATABASE
+      schema: !env_var SNOWFLAKE_SCHEMA
       language: javascript
       execute_as: owner
       args:
