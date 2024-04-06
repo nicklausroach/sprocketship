@@ -144,7 +144,6 @@ from the project directory (or provide the directory, e.g. `sprocketship liftoff
 
 ```
 name: The name of the procedure
-replace_if_exists: Boolean, inserts `OR REPLACE` into the create command
 database: The name of the database where the procedure will be stored
 schema: The name of the schema where the procedure will be stored
 language: The language of the procedure definition
