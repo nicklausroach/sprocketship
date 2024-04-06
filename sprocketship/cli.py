@@ -38,37 +38,39 @@ def create_javascript_stored_procedure(**kwargs):
     return render_file(os.path.join(Path(__file__).parent, "templates/javascript.sql"), **kwargs, **procedure_def_dict)
 
 
-@click.command()
-@click.argument("subcommand", type=click.Choice(["liftoff"]))
+@click.group()
+def main():
+    pass
+
+@main.command()
 @click.argument("dir", default=".")
 @click.option('--show', is_flag=True)
-def main(subcommand, dir, show):
-    if subcommand == "liftoff":
-        click.echo(click.style(f"🚀 Sprocketship lifting off!", fg='white', bold=True))
-        # Open config in current directory
+def liftoff(dir, show):
+    click.echo(click.style(f"🚀 Sprocketship lifting off!", fg='white', bold=True))
+    # Open config in current directory
 
-        data = render_file(os.path.join(dir, '.sprocketship.yml'), return_dict=True)
+    data = render_file(os.path.join(dir, '.sprocketship.yml'), return_dict=True)
 
-        con = connector.connect(**data["snowflake"])
+    con = connector.connect(**data["snowflake"])
 
-        # Get the configurations for each procedure and attach relative path to file directory
-        configs_with_paths = extract_configs(data["procedures"])
-        procs = list(itertools.chain(*configs_with_paths.values()))
+    # Get the configurations for each procedure and attach relative path to file directory
+    configs_with_paths = extract_configs(data["procedures"])
+    procs = list(itertools.chain(*configs_with_paths.values()))
 
-        for proc in procs:
-            try:
-                rendered_proc = create_javascript_stored_procedure(**proc, **{'project_dir': dir})
-                con.cursor().execute(rendered_proc)
-                msg = click.style(f"{proc['name']} ", fg='green', bold=True)
-                msg += click.style(f"launched into schema ", fg='white', bold=True)
-                msg += click.style(f"{proc['database']}.{proc['schema']}", fg='blue', bold=True)
-                click.echo(msg)
-                if show:
-                    click.echo(rendered_proc)
-            except Exception as e:
-                msg = click.style(f"{proc['name']} ", fg='red', bold=True)
-                msg += click.style(f"could not be launched into schema ", fg='white', bold=True)
-                msg += click.style(f"{proc['database']}.{proc['schema']}", fg='blue', bold=True)
-                click.echo(msg)
-                click.echo(e, err=True)
+    for proc in procs:
+        try:
+            rendered_proc = create_javascript_stored_procedure(**proc, **{'project_dir': dir})
+            con.cursor().execute(rendered_proc)
+            msg = click.style(f"{proc['name']} ", fg='green', bold=True)
+            msg += click.style(f"launched into schema ", fg='white', bold=True)
+            msg += click.style(f"{proc['database']}.{proc['schema']}", fg='blue', bold=True)
+            click.echo(msg)
+            if show:
                 click.echo(rendered_proc)
+        except Exception as e:
+            msg = click.style(f"{proc['name']} ", fg='red', bold=True)
+            msg += click.style(f"could not be launched into schema ", fg='white', bold=True)
+            msg += click.style(f"{proc['database']}.{proc['schema']}", fg='blue', bold=True)
+            click.echo(msg)
+            click.echo(e, err=True)
+            click.echo(rendered_proc)
