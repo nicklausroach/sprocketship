@@ -2,9 +2,8 @@ import click
 import os
 import itertools
 from snowflake import connector
-from absql import render_text, render_file
-from jinja2 import Environment
-from ruamel.yaml import YAML
+from absql import render_file
+from pathlib import Path
 
 def extract_configs(data, path=''):
     configs = {}
@@ -34,25 +33,9 @@ def get_file_contents(fpath):
 
 
 def create_javascript_stored_procedure(**kwargs):
-  path = os.path.join(kwargs['project_dir'], get_full_file_path(kwargs))
-  procedure_def_dict = {'procedure_definition': get_file_contents(path)}
-  create_proc_text = '''
-CREATE {%if replace_if_exists %}OR REPLACE{% endif %} PROCEDURE {{database}}.{{schema}}.{{name}} (
-{%- for arg_name, arg_data_type in args.items() %}
-"{{arg_name.upper()}}" {{arg_data_type.upper()}}{%if not loop.last %},{% endif %}
-{%- endfor -%}
-)
-{% if copy_grants %}COPY GRANTS{% endif %}
-RETURNS {{returns}}
-LANGUAGE JAVASCRIPT
-{% if comment %}COMMENT = '{{comment}}'{% endif %}
-EXECUTE AS {{execute_as}}
-AS '
-{{procedure_definition}}' 
-  '''
-  return render_text(create_proc_text, **kwargs, **procedure_def_dict)
-
-
+    path = os.path.join(kwargs['project_dir'], get_full_file_path(kwargs))
+    procedure_def_dict = {'procedure_definition': get_file_contents(path)}
+    return render_file(os.path.join(Path(__file__).parent, "templates/javascript.sql"), **kwargs, **procedure_def_dict)
 
 
 @click.command()

@@ -8,7 +8,6 @@ snowflake:
 procedures:
   development:
     - name: create_temp_database
-      replace_if_exists: true
       database: !env_var SNOWFLAKE_DATABASE
       schema: !env_var SNOWFLAKE_SCHEMA
       language: javascript
@@ -23,7 +22,6 @@ procedures:
 
   admin:
     - name: create_database_reader
-      replace_if_exists: true
       database: !env_var SNOWFLAKE_DATABASE
       schema: !env_var SNOWFLAKE_SCHEMA
       language: javascript
@@ -35,7 +33,6 @@ procedures:
         Creates a role with full read access to the provided database with name of the form <DATABASE_NAME>_READER
 
     - name: create_database_writer
-      replace_if_exists: true
       database: !env_var SNOWFLAKE_DATABASE
       schema: !env_var SNOWFLAKE_SCHEMA
       language: javascript
