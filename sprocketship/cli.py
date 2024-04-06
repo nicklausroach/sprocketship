@@ -71,3 +71,4 @@ def main(subcommand, dir, show):
                 msg += click.style(f"{proc['database']}.{proc['schema']}", fg='blue', bold=True)
                 click.echo(msg)
                 click.echo(e, err=True)
+                click.echo(rendered_proc)

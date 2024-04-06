@@ -16,8 +16,10 @@ LANGUAGE JAVASCRIPT
 
 EXECUTE AS {{execute_as}}
 
-AS '
+AS
+
+$$
 
 {{procedure_definition}}
 
-' 
+$$

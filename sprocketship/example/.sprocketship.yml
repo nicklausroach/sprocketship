@@ -15,10 +15,9 @@ procedures:
       args:
         - name: database_name
           type: varchar
-          default: sandbox
         - name: ttl
           type: varchar
-          default: 30
+          default: 14
       returns: varchar
       comment: |
         Allows the caller to make a temporary development database that cleans up after a designated amount of time.
@@ -28,11 +27,10 @@ procedures:
       database: !env_var SNOWFLAKE_DATABASE
       schema: !env_var SNOWFLAKE_SCHEMA
       language: javascript
-      execute_as: owner
+      execute_as: caller
       args:
         - name: database_name
           type: varchar
-          default: sandbox
       returns: varchar
       comment: |
         Creates a role with full read access to the provided database with name of the form <DATABASE_NAME>_READER
@@ -41,11 +39,10 @@ procedures:
       database: !env_var SNOWFLAKE_DATABASE
       schema: !env_var SNOWFLAKE_SCHEMA
       language: javascript
-      execute_as: owner
+      execute_as: caller
       args:
         - name: database_name
           type: varchar
-          default: sandbox
       returns: varchar
       comment: |
         Creates a role with full write access to the provided database with name of the form <DATABASE_NAME>_WRITER
