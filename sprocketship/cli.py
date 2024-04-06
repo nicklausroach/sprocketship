@@ -41,7 +41,8 @@ def create_javascript_stored_procedure(**kwargs):
 @click.command()
 @click.argument("subcommand", type=click.Choice(["liftoff"]))
 @click.argument("dir", default=".")
-def main(subcommand, dir):
+@click.option('--show', is_flag=True)
+def main(subcommand, dir, show):
     if subcommand == "liftoff":
         click.echo(click.style(f"🚀 Sprocketship lifting off!", fg='white', bold=True))
         # Open config in current directory
@@ -57,12 +58,13 @@ def main(subcommand, dir):
         for proc in procs:
             try:
                 rendered_proc = create_javascript_stored_procedure(**proc, **{'project_dir': dir})
-                print(rendered_proc)
                 con.cursor().execute(rendered_proc)
                 msg = click.style(f"{proc['name']} ", fg='green', bold=True)
                 msg += click.style(f"launched into schema ", fg='white', bold=True)
                 msg += click.style(f"{proc['database']}.{proc['schema']}", fg='blue', bold=True)
                 click.echo(msg)
+                if show:
+                    click.echo(rendered_proc)
             except Exception as e:
                 msg = click.style(f"{proc['name']} ", fg='red', bold=True)
                 msg += click.style(f"could not be launched into schema ", fg='white', bold=True)
