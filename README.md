@@ -149,7 +149,9 @@ schema: The name of the schema where the procedure will be stored
 language: The language of the procedure definition
 execute_as: caller or owner
 args:
-    arg_name: arg_type
+    - name: Name of argument
+      type: Type of argument
+      default: (Optional) default value for the argument
 returns: The return type
 comment: Explanation of the procedure
 ```
@@ -158,8 +160,6 @@ comment: Explanation of the procedure
 
 sprocketship currently only supports Javascript-based stored procedures (Python support coming soon!). Additionally, there are a few options from the `CREATE STORED PROCEDURE` function that are not yet supported:
 
-* `<arg-name> <arg-type> DEFAULT <default-value>`
-* `COPY GRANTS`
 * `RETURNS <result-data-type> NOT NULL`
 * `CALLED ON NULL INPUT | { RETURNS NULL ON NULL INPUT | STRICT }`
 * `VOLATILE | IMMUTABLE` (deprecated)

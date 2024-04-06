@@ -57,6 +57,7 @@ def main(subcommand, dir):
         for proc in procs:
             try:
                 rendered_proc = create_javascript_stored_procedure(**proc, **{'project_dir': dir})
+                print(rendered_proc)
                 con.cursor().execute(rendered_proc)
                 msg = click.style(f"{proc['name']} ", fg='green', bold=True)
                 msg += click.style(f"launched into schema ", fg='white', bold=True)
