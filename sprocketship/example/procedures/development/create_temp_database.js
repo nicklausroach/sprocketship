@@ -1,8 +1,12 @@
 
 var userResult = snowflake.execute({sqlText: `SELECT CURRENT_USER()`});
 userResult.next();
-
 var currentUser = userResult.getColumnValue(`CURRENT_USER()`);
+
+var roleResult = snowflake.execute({sqlText: `SELECT CURRENT_ROLE()`});
+roleResult.next();
+var currentRole = roleResult.getColumnValue(`CURRENT_ROLE()`);
+
 var databaseName = DATABASE_NAME.toUpperCase();
 var ttl = parseInt(TTL);
 
@@ -29,9 +33,29 @@ var sqlCommands = [
             ${ttl},
             '${scheduledDropTimestamp.toISOString()}'
         )
+    `,
     `
+    CREATE OR REPLACE TASK ${databaseName}.PUBLIC.DROP_${databaseName}_TASK
+    WAREHOUSE = PURINA
+    SCHEDULE = '2 MINUTE'
+    AS
+    CALL SANDBOX.NICKROACH.DROP_DATABASE_IF_EXPIRED('${databaseName}', '${scheduledDropTimestamp}')
+    `,
+    `ALTER TASK ${databaseName}.PUBLIC.DROP_${databaseName}_TASK RESUME`
 ]
 
-var resultSet = sqlCommands.map(command => snowflake.execute({sqlText: command}));
+for (i in sqlCommands) {
+    try {
+        snowflake.execute( {sqlText: sqlCommands[i]} );
+    }
+    catch (err)  {
+        result = "Command: " + sqlCommands[i];
+        result += "\nExecuted as Role: " + currentRole;
+        result +=  "\nFailed: Code: " + err.code + "\n  State: " + err.state;
+        result += "\n  Message: " + err.message;
+        result += "\nStack Trace:\n" + err.stackTraceTxt; 
+        return result;
+    }
+}
 
 return`Database ${databaseName} created successfully.`;

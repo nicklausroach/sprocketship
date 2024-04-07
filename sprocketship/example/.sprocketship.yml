@@ -11,7 +11,7 @@ procedures:
       database: !env_var SNOWFLAKE_DATABASE
       schema: !env_var SNOWFLAKE_SCHEMA
       language: javascript
-      execute_as: caller
+      execute_as: owner
       args:
         - name: database_name
           type: varchar
@@ -46,3 +46,17 @@ procedures:
       returns: varchar
       comment: |
         Creates a role with full write access to the provided database with name of the form <DATABASE_NAME>_WRITER
+
+    - name: drop_database_if_expired
+      database: !env_var SNOWFLAKE_DATABASE
+      schema: !env_var SNOWFLAKE_SCHEMA
+      language: javascript
+      execute_as: owner
+      args:
+        - name: database_name
+          type: varchar
+        - name: drop_timestamp
+          type: varchar
+      returns: varchar
+      comment: |
+        Drops the given database if the database ttl has expired

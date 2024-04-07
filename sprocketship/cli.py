@@ -74,3 +74,33 @@ def liftoff(dir, show):
             click.echo(msg)
             click.echo(e, err=True)
             click.echo(rendered_proc)
+
+
+@main.command()
+@click.argument("dir", default=".")
+@click.option("--target", default="target/sprocketship")
+def build(dir, target):
+    click.echo(click.style(f"⚙️ Building sprocketship!", fg='white', bold=True))
+    # Open config in current directory
+
+    Path(os.path.join(dir, target)).mkdir(parents=True, exist_ok=True)
+
+    data = render_file(os.path.join(dir, '.sprocketship.yml'), return_dict=True)
+
+    # Get the configurations for each procedure and attach relative path to file directory
+    configs_with_paths = extract_configs(data["procedures"])
+    procs = list(itertools.chain(*configs_with_paths.values()))
+
+    for proc in procs:
+        try:
+            rendered_proc = create_javascript_stored_procedure(**proc, **{'project_dir': dir})
+            with open(os.path.join(dir, target, proc["name"] + ".sql"), '+a') as f:
+                f.write(rendered_proc)
+            msg = click.style(f"{proc['name']} ", fg='green', bold=True)
+            msg += click.style(f"successfully built", fg='white', bold=True)
+            click.echo(msg)
+        except Exception as e:
+            msg = click.style(f"{proc['name']} ", fg='red', bold=True)
+            msg += click.style(f"could not be built", fg='white', bold=True)
+            click.echo(msg)
+            click.echo(e, err=True)
