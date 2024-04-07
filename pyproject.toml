@@ -28,4 +28,4 @@ sprocketship = "sprocketship.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/nicklausroach/sprocketship"
-Issues = "https://github.com/pypa/nicklausroach/sprocketship"
+Issues = "https://github.com/nicklausroach/sprocketship/issues"
