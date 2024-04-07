@@ -19,21 +19,6 @@ var sqlCommands = [
     `CALL SANDBOX.NICKROACH.CREATE_DATABASE_READER('${databaseName}');`,
     `GRANT ROLE ${databaseName}_READER, ${databaseName}_WRITER TO USER ${currentUser};`,
     `GRANT ROLE ${databaseName}_READER, ${databaseName}_WRITER TO ROLE ACCOUNTADMIN;`,
-    `INSERT INTO UTIL_DB.PROC_TABLES.TEMP_DATABASES (
-        DATABASE_NAME,
-        CREATED_BY,
-        CREATED_AT,
-        TTL,
-        SCHEDULED_DROP_TIMESTAMP
-    ) VALUES
-        (
-            '${databaseName}',
-            '${currentUser}',
-            '${new Date().toISOString()}',
-            ${ttl},
-            '${scheduledDropTimestamp.toISOString()}'
-        )
-    `,
     `
     CREATE OR REPLACE TASK ${databaseName}.PUBLIC.DROP_${databaseName}_TASK
     WAREHOUSE = PURINA
