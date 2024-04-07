@@ -37,7 +37,7 @@ var sqlCommands = [
     `
     CREATE OR REPLACE TASK ${databaseName}.PUBLIC.DROP_${databaseName}_TASK
     WAREHOUSE = PURINA
-    SCHEDULE = '2 MINUTE'
+    SCHEDULE = '360 MINUTE'
     AS
     CALL SANDBOX.NICKROACH.DROP_DATABASE_IF_EXPIRED('${databaseName}', '${scheduledDropTimestamp}')
     `,
