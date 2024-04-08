@@ -12,7 +12,7 @@ readme = "README.md"
 description = "Better stored procedure management"
 dependencies = [
     "click",
-    "snowflake",
+    "snowflake-connector-python",
     "ABSQL",
     "ruamel.yaml",
     "jinja2"
