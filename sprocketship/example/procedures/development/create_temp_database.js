@@ -1,4 +1,3 @@
-
 var userResult = snowflake.execute({sqlText: `SELECT CURRENT_USER()`});
 userResult.next();
 var currentUser = userResult.getColumnValue(`CURRENT_USER()`);
