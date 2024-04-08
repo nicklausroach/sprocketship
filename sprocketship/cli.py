@@ -29,6 +29,7 @@ def liftoff(dir, show):
     configs_with_paths = extract_configs(data["procedures"])
     procs = list(itertools.chain(*configs_with_paths.values()))
 
+    err = False
     for proc in procs:
         try:
             rendered_proc = create_javascript_stored_procedure(
@@ -44,6 +45,7 @@ def liftoff(dir, show):
             if show:
                 click.echo(rendered_proc)
         except Exception as e:
+            err = True
             msg = click.style(f"{proc['name']} ", fg="red", bold=True)
             msg += click.style(
                 f"could not be launched into schema ", fg="white", bold=True
@@ -54,8 +56,7 @@ def liftoff(dir, show):
             click.echo(msg)
             click.echo(e, err=True)
             click.echo(rendered_proc)
-            exit(1)
-    exit(0)
+    exit(1 if err else 0)
 
 
 @main.command()
@@ -73,6 +74,7 @@ def build(dir, target):
     configs_with_paths = extract_configs(data["procedures"])
     procs = list(itertools.chain(*configs_with_paths.values()))
 
+    err = False
     for proc in procs:
         try:
             rendered_proc = create_javascript_stored_procedure(
@@ -84,9 +86,9 @@ def build(dir, target):
             msg += click.style(f"successfully built", fg="white", bold=True)
             click.echo(msg)
         except Exception as e:
+            err = True
             msg = click.style(f"{proc['name']} ", fg="red", bold=True)
             msg += click.style(f"could not be built", fg="white", bold=True)
             click.echo(msg)
             click.echo(e, err=True)
-            exit(1)
-    exit(0)
+    exit(1 if err else 0)
