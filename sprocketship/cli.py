@@ -43,7 +43,6 @@ def liftoff(dir, show):
             click.echo(msg)
             if show:
                 click.echo(rendered_proc)
-            exit(0)
         except Exception as e:
             msg = click.style(f"{proc['name']} ", fg="red", bold=True)
             msg += click.style(
@@ -56,6 +55,7 @@ def liftoff(dir, show):
             click.echo(e, err=True)
             click.echo(rendered_proc)
             exit(1)
+    exit(0)
 
 
 @main.command()
@@ -83,10 +83,10 @@ def build(dir, target):
             msg = click.style(f"{proc['name']} ", fg="green", bold=True)
             msg += click.style(f"successfully built", fg="white", bold=True)
             click.echo(msg)
-            exit(0)
         except Exception as e:
             msg = click.style(f"{proc['name']} ", fg="red", bold=True)
             msg += click.style(f"could not be built", fg="white", bold=True)
             click.echo(msg)
             click.echo(e, err=True)
             exit(1)
+    exit(0)
