@@ -60,15 +60,3 @@ procedures:
       returns: varchar
       comment: |
         Creates a role with full write access to the provided database with name of the form <DATABASE_NAME>_WRITER
-
-    - name: clone_purina
-      database: !env_var SNOWFLAKE_DATABASE
-      schema: !env_var SNOWFLAKE_SCHEMA
-      language: javascript
-      execute_as: owner
-      args:
-        - name: pull_request_id
-          type: varchar
-      returns: varchar
-      comment: |
-        Creates a clone of the purina database for branch deployments
