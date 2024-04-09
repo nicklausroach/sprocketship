@@ -35,6 +35,10 @@ def liftoff(dir, show):
             rendered_proc = create_javascript_stored_procedure(
                 **proc, **{"project_dir": dir}
             )
+            if 'use_role' in proc.keys():
+                con.cursor().execute(f"USE ROLE {proc['use_role'].upper()}")
+            else:
+                con.cursor().execute(f"USE ROLE {data['snowflake']['role']}")
             con.cursor().execute(rendered_proc)
             msg = click.style(f"{proc['name']} ", fg="green", bold=True)
             msg += click.style(f"launched into schema ", fg="white", bold=True)
@@ -80,7 +84,7 @@ def build(dir, target):
             rendered_proc = create_javascript_stored_procedure(
                 **proc, **{"project_dir": dir}
             )
-            with open(os.path.join(dir, target, proc["name"] + ".sql"), "+a") as f:
+            with open(os.path.join(dir, target, proc["name"] + ".sql"), "w") as f:
                 f.write(rendered_proc)
             msg = click.style(f"{proc['name']} ", fg="green", bold=True)
             msg += click.style(f"successfully built", fg="white", bold=True)

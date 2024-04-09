@@ -11,6 +11,7 @@ procedures:
       database: !env_var SNOWFLAKE_DATABASE
       schema: !env_var SNOWFLAKE_SCHEMA
       language: javascript
+      use_role: data_engineer
       execute_as: owner
       args:
         - name: database_name

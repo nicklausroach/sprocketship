@@ -22,4 +22,4 @@ $$
 
 {{procedure_definition}}
 
-$$
+$$;

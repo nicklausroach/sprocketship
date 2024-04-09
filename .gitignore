@@ -3,3 +3,4 @@ dist/
 *.egg-info/
 build/
 **/__pycache__/
+sprocketship/example/target
