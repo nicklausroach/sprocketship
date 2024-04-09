@@ -35,3 +35,11 @@ def create_javascript_stored_procedure(**kwargs):
         **kwargs,
         **procedure_def_dict,
     )
+
+def grant_usage(proc, con):
+    types = [arg['type'] for arg in proc['args']]
+    types_str = f"({','.join(types)})"
+    for grantee_type in proc['grant_usage']:
+        for grantee in proc['grant_usage'][grantee_type]:
+            query = f"GRANT USAGE ON PROCEDURE {proc['database']}.{proc['schema']}.{proc['name']}{types_str} TO {grantee_type} {grantee}"
+            con.cursor().execute(query)

@@ -22,6 +22,9 @@ procedures:
       returns: varchar
       comment: |
         Allows the caller to make a temporary development database that cleans up after a designated amount of time.
+      grant_usage:
+        role:
+          - data_engineer
 
     - name: drop_database_if_expired
       database: !env_var SNOWFLAKE_DATABASE

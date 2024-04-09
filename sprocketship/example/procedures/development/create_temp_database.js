@@ -17,7 +17,7 @@ var sqlCommands = [
     `CALL SANDBOX.NICKROACH.CREATE_DATABASE_WRITER('${databaseName}');`,
     `CALL SANDBOX.NICKROACH.CREATE_DATABASE_READER('${databaseName}');`,
     `GRANT ROLE ${databaseName}_READER, ${databaseName}_WRITER TO USER ${currentUser};`,
-    `GRANT ROLE ${databaseName}_READER, ${databaseName}_WRITER TO ROLE ACCOUNTADMIN;`,
+    `GRANT ROLE ${databaseName}_READER, ${databaseName}_WRITER TO ROLE SYSADMIN;`,
     `
     CREATE OR REPLACE TASK ${databaseName}.PUBLIC.DROP_${databaseName}_TASK
     WAREHOUSE = PURINA

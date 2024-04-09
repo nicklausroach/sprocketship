@@ -5,7 +5,7 @@ from snowflake import connector
 from absql import render_file
 from pathlib import Path
 
-from .utils import extract_configs, create_javascript_stored_procedure
+from .utils import extract_configs, create_javascript_stored_procedure, grant_usage
 
 
 @click.group()
@@ -40,11 +40,15 @@ def liftoff(dir, show):
             else:
                 con.cursor().execute(f"USE ROLE {data['snowflake']['role']}")
             con.cursor().execute(rendered_proc)
+            if 'grant_usage' in proc.keys():
+                grant_usage(proc, con)
+            
             msg = click.style(f"{proc['name']} ", fg="green", bold=True)
             msg += click.style(f"launched into schema ", fg="white", bold=True)
             msg += click.style(
                 f"{proc['database']}.{proc['schema']}", fg="blue", bold=True
             )
+
             click.echo(msg)
             if show:
                 click.echo(rendered_proc)
