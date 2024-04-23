@@ -1,0 +1,18 @@
+snowflake:
+  account: !env_var SNOWFLAKE_ACCOUNT
+  user: !env_var SNOWFLAKE_USER
+  password: !env_var SNOWFLAKE_PASSWORD
+  role: !env_var SNOWFLAKE_ROLE
+  warehouse: !env_var SNOWFLAKE_WAREHOUSE
+
+procedures:
+  +database: !env_var SNOWFLAKE_DATABASE
+  +schema: !env_var SNOWFLAKE_SCHEMA
+  +language: javascript
+  +execute_as: owner
+  
+  useradmin:
+    +use_role: useradmin
+  
+  sysadmin:
+    +use_role: sysadmin
