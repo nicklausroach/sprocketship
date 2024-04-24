@@ -26,7 +26,7 @@ def main(ctx):
 def liftoff(dir, show):
     click.echo(click.style(f"🚀 Sprocketship lifting off!", fg="white", bold=True))
     data = render_file(
-        os.path.join(dir, "procedures", ".sprocketship.yml"), return_dict=True
+        os.path.join(dir, ".sprocketship.yml"), return_dict=True
     )
     con = connector.connect(**data["snowflake"])
     files = list(Path(dir).rglob("*.js"))
@@ -74,7 +74,7 @@ def build(dir, target):
     Path(os.path.join(dir, target)).mkdir(parents=True, exist_ok=True)
 
     data = render_file(
-        os.path.join(dir, "procedures", ".sprocketship.yml"), return_dict=True
+        os.path.join(dir, ".sprocketship.yml"), return_dict=True
     )
     files = list(Path(dir).rglob("*.js"))
 

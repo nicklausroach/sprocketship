@@ -94,17 +94,19 @@
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Currently, sprocketship expects a `.sprocketship.yml` file and a `procedures/` directory at the same level in a directory structure.
+### Structure
+
+Currently, sprocketship expects a `.sprocketship.yml` file in a `procedures/` directory.
 
 ```
 ├── dbt_models
 │   ├── customers.sql
 │   ├── products.sql
 ├── procedures
-│   ├── admin
+│   ├── useradmin
 │   │   ├── create_database_writer_role.js
 │   │   ├── create_database_reader_role.js
-│   ├── development
+│   ├── sysadmin
 │   │   ├── create_temp_database.js
 └── .sprocketship.yml
 ```
@@ -131,6 +133,52 @@ procedures:
       ...
 ```
 
+### Directory-level Default Parameters
+
+sprocketship allows providing default parameters at any given level of
+your project. These defaults will be applied recursively to any procedures
+defined in any of the subdirectories, unless overridden by a default in one
+of the subdirectories.
+
+```
+procedures:
+  # for all procedures, default to the below database and schema
+  +database: !env_var SNOWFLAKE_DATABASE
+  +schema: !env_var SNOWFLAKE_SCHEMA
+  development:
+    # for all procedures in the development directory,
+    # default to using the sysadmin role
+    +use_role: sysadmin
+    create_temp_database:
+      args:
+        - name: Name of argument
+          type: Type of argument
+          default: (Optional) default value for the argument
+      returns: varchar
+```
+
+### File Frontmatter
+
+Thanks to ABSQL, sprocketship also provides the ability to define parameters using file frontmatter. Suppose we have a file `create_database_writer_role.js`, we can define parameters for the stored procedure within the file using frontmatter:
+
+```js
+/*
+database: my_database
+schema: my_schema
+language: javascript
+execute_as: owner
+use_role: sysadmin
+*/
+```
+
+sprocketship will automatically parse and apply the parameters defined in the frontmatter to the stored procedure.
+
+### Recommended Configuration
+
+When setting up your sprocketship project, we recommend setting more general parameters (e.g., database, schema, language, etc.) in the `.sprocketship.yml` file, and anything that's specific to a given procedure should be defined in the file frontmatter of that procedure, such as the args or return type.
+
+### Execution
+
 From here, simply run 
 
 `$ sprocketship liftoff` 
@@ -140,16 +188,16 @@ from the project directory (or provide the directory, e.g. `sprocketship liftoff
 ### Exhaustive Options for Stored Procedure Configuration
 
 ```
-name: The name of the procedure
 database: The name of the database where the procedure will be stored
 schema: The name of the schema where the procedure will be stored
 language: The language of the procedure definition
 execute_as: caller or owner
+use_role: The role you'd like to own the procedure
 args:
     - name: Name of argument
       type: Type of argument
       default: (Optional) default value for the argument
-returns: The return type
+returns: The return type, this can include the `NOT NULL` option
 comment: Explanation of the procedure
 ```
 
@@ -157,7 +205,6 @@ comment: Explanation of the procedure
 
 sprocketship currently only supports Javascript-based stored procedures (Python support coming soon!). Additionally, there are a few options from the `CREATE STORED PROCEDURE` function that are not yet supported:
 
-* `RETURNS <result-data-type> NOT NULL`
 * `CALLED ON NULL INPUT | { RETURNS NULL ON NULL INPUT | STRICT }`
 * `VOLATILE | IMMUTABLE` (deprecated)
 
