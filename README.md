@@ -113,7 +113,7 @@ Currently, sprocketship expects a `.sprocketship.yml` file in a `procedures/` di
 
 The yaml path to each procedure in the `sprocketship.yml` should follow that of the paths to their corresponding files in the `procedures/` directory. 
 
-```
+```yml
 procedures:
   development:
     - name: create_temp_database
@@ -140,7 +140,7 @@ your project. These defaults will be applied recursively to any procedures
 defined in any of the subdirectories, unless overridden by a default in one
 of the subdirectories.
 
-```
+```yml
 procedures:
   # for all procedures, default to the below database and schema
   +database: !env_var SNOWFLAKE_DATABASE
@@ -187,7 +187,7 @@ from the project directory (or provide the directory, e.g. `sprocketship liftoff
 
 ### Exhaustive Options for Stored Procedure Configuration
 
-```
+```yml
 database: The name of the database where the procedure will be stored
 schema: The name of the schema where the procedure will be stored
 language: The language of the procedure definition
