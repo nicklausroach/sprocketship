@@ -175,7 +175,38 @@ sprocketship will automatically parse and apply the parameters defined in the fr
 
 ### Recommended Configuration
 
-When setting up your sprocketship project, we recommend setting more general parameters (e.g., database, schema, language, etc.) in the `.sprocketship.yml` file, and anything that's specific to a given procedure should be defined in the file frontmatter of that procedure, such as the args or return type.
+When setting up your sprocketship project, we recommend setting more general parameters (e.g., database, schema, language, etc.) in the `.sprocketship.yml` file, and anything that's specific to a given procedure should be defined in the file frontmatter of that procedure, such as the args or return type. Example below:
+
+```yml
+# .sprocketship.yml
+procedures:
+  +database: my_database
+  +schema: my_schema
+  +language: javascript
+  +execute_as: owner
+  sysadmin:
+    +use_role: sysadmin
+  useradmin:
+    +use_role: useradmin
+```
+
+In the above `.sprocketship.yml`, we've set the database, schema, language, and executor at the highest level. This means that all procedures in the `sysadmin` and `useradmin` directories will inherit these defaults unless overridden. Now we can define procedure-specific
+parameters in the file frontmatter:
+
+```js
+// procedures/useradmin/create_role.js
+/*
+args:
+  - name: role_name
+    type: varchar
+returns: varchar
+comment: |
+  Creates a role with the provided name
+*/
+
+var roleName = ROLE_NAME;
+snowflake.execute(`CREATE ROLE IF NOT EXISTS ${roleName}`)
+```
 
 ### Execution
 
