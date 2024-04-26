@@ -116,18 +116,18 @@ The yaml path to each procedure in the `sprocketship.yml` should follow that of 
 ```yml
 procedures:
   development:
-    - name: create_temp_database
+    create_temp_database:
       database: !env_var SNOWFLAKE_DATABASE
       schema: !env_var SNOWFLAKE_SCHEMA
       ...
 
   admin:
-    - name: create_database_reader
+    create_database_reader:
       database: !env_var SNOWFLAKE_DATABASE
       schema: !env_var SNOWFLAKE_SCHEMA
       ...
 
-    - name: create_database_writer
+    create_database_writer:
       database: !env_var SNOWFLAKE_DATABASE
       schema: !env_var SNOWFLAKE_SCHEMA
       ...
