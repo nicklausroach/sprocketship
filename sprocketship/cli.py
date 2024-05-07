@@ -43,7 +43,7 @@ def liftoff(dir, show):
             else:
                 con.cursor().execute(f"USE ROLE {data['snowflake']['role']}")
             con.cursor().execute(proc_dict["rendered_file"])
-            if "grant_usage" in proc.keys():
+            if "grant_usage" in proc_dict.keys():
                 grant_usage(proc_dict, con)
 
             msg = click.style(f"{proc_dict['name']} ", fg="green", bold=True)

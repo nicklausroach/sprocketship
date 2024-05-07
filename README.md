@@ -30,7 +30,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/nicklausroach/sprocketship" style="font-size: 60px; text-decoration: none;">
-    <img src="./resources/logo.webp" width='500'>
+    <img src="./sprocketship/resources/logo.webp" width='500'>
   </a>
 <h3 align="center">Sprocketship</h3>
 
