@@ -1,16 +1,15 @@
 import click
 import os
-import itertools
 from snowflake import connector
 from absql import render_file
 from pathlib import Path
 import traceback
 
 from .utils import (
-    extract_configs,
     create_javascript_stored_procedure,
     grant_usage,
     get_file_config,
+    serialize_private_key
 )
 
 
@@ -28,6 +27,11 @@ def liftoff(dir, show):
     data = render_file(
         os.path.join(dir, ".sprocketship.yml"), return_dict=True
     )
+    if "private_key" in data["snowflake"].keys():
+        # Update dictionary to serialize private key
+        private_key_password = data["snowflake"].get("private_key_password", None)
+        data["snowflake"]["private_key"] = serialize_private_key(data["snowflake"]["private_key"].encode(), password=private_key_password)
+
     con = connector.connect(**data["snowflake"])
     files = list(Path(dir).rglob("*.js"))
 

@@ -1,6 +1,10 @@
 import os
 from absql import render_file
 from pathlib import Path
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.asymmetric import dsa
+from cryptography.hazmat.primitives import serialization
 
 
 def extract_configs(data, path=""):
@@ -67,3 +71,16 @@ def grant_usage(proc, con):
         for grantee in proc["grant_usage"][grantee_type]:
             query = f"GRANT USAGE ON PROCEDURE {proc['database']}.{proc['schema']}.{proc['name']}{types_str} TO {grantee_type} {grantee}"
             con.cursor().execute(query)
+
+def serialize_private_key(private_key, password=None):
+    p_key= serialization.load_pem_private_key(
+        private_key,
+        password=None,
+        backend=default_backend()
+    )
+
+    return p_key.private_bytes(
+        encoding=serialization.Encoding.DER,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption()
+    )
