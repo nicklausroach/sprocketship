@@ -39,12 +39,10 @@ def liftoff(dir: str, show: bool) -> None:
             proc_dict = create_javascript_stored_procedure(
                 **proc, **{"project_dir": dir}
             )
-            if "use_role" in proc.keys():
-                con.cursor().execute(f"USE ROLE {proc_dict['use_role'].upper()}")
-            else:
-                con.cursor().execute(f"USE ROLE {data['snowflake']['role']}")
+            use_role = proc_dict.get('use_role', data['snowflake']['role'])
+            con.cursor().execute(f"USE ROLE {use_role.upper()}")
             con.cursor().execute(proc_dict["rendered_file"])
-            if "grant_usage" in proc_dict.keys():
+            if "grant_usage" in proc_dict:
                 grant_usage(proc_dict, con)
 
             msg = click.style(f"{proc_dict['name']} ", fg="green", bold=True)
@@ -56,13 +54,13 @@ def liftoff(dir: str, show: bool) -> None:
             click.echo(msg)
             if show:
                 click.echo(proc_dict["rendered_file"])
-        except Exception as e:
+        except Exception:
             err = True
             msg = click.style(f"{proc['name']} ", fg="red", bold=True)
             msg += click.style(f"could not be launched.", fg="white", bold=True)
             click.echo(msg)
             click.echo(traceback.format_exc(), err=True)
-    exit(1 if err else 0)
+    sys.exit(1 if err else 0)
 
 
 @main.command()
@@ -91,10 +89,10 @@ def build(dir: str, target: str) -> None:
             msg = click.style(f"{proc_dict['name']} ", fg="green", bold=True)
             msg += click.style(f"successfully built", fg="white", bold=True)
             click.echo(msg)
-        except Exception as e:
+        except Exception:
             err = True
             msg = click.style(f"{proc['name']} ", fg="red", bold=True)
             msg += click.style(f"could not be built", fg="white", bold=True)
             click.echo(msg)
             click.echo(traceback.format_exc(), err=True)
-    exit(1 if err else 0)
+    sys.exit(1 if err else 0)
