@@ -1,3 +1,9 @@
+"""Command-line interface for sprocketship stored procedure management.
+
+Provides CLI commands for deploying stored procedures to Snowflake (liftoff)
+and building SQL files locally (build).
+"""
+
 import click
 import sys
 import traceback
@@ -17,6 +23,7 @@ from .utils import (
 @click.group()
 @click.pass_context
 def main(ctx: click.Context) -> None:
+    """Main entry point for the sprocketship CLI."""
     pass
 
 
@@ -24,6 +31,20 @@ def main(ctx: click.Context) -> None:
 @click.argument("dir", default=".")
 @click.option("--show", is_flag=True)
 def liftoff(dir: str, show: bool) -> None:
+    """Deploy stored procedures to Snowflake.
+
+    Discovers all .js files in the procedures/ directory, renders them
+    with configuration from .sprocketship.yml, and executes CREATE PROCEDURE
+    statements in Snowflake. Optionally switches roles before deployment
+    and grants usage permissions.
+
+    Args:
+        dir: Directory containing .sprocketship.yml and procedures/
+        show: If True, print rendered SQL to stdout after deployment
+
+    Raises:
+        SystemExit: Exits with code 1 if any procedure fails to deploy
+    """
     click.echo(click.style(f"🚀 Sprocketship lifting off!", fg="white", bold=True))
     config_path = Path(dir) / ".sprocketship.yml"
     data = render_file(config_path, return_dict=True)
@@ -65,6 +86,19 @@ def liftoff(dir: str, show: bool) -> None:
 @click.argument("dir", default=".")
 @click.option("--target", default="target/sprocketship")
 def build(dir: str, target: str) -> None:
+    """Build SQL files locally without deploying to Snowflake.
+
+    Discovers all .js files in the procedures/ directory, renders them
+    with configuration from .sprocketship.yml, and writes the resulting
+    CREATE PROCEDURE SQL statements to the target directory.
+
+    Args:
+        dir: Directory containing .sprocketship.yml and procedures/
+        target: Output directory for generated SQL files (relative to dir)
+
+    Raises:
+        SystemExit: Exits with code 1 if any procedure fails to build
+    """
     click.echo(click.style(f"⚙️ Building sprocketship!", fg="white", bold=True))
     # Open config in current directory
 
