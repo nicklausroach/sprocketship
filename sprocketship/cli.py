@@ -1,5 +1,4 @@
 import click
-import os
 import sys
 import traceback
 from typing import Any
@@ -26,9 +25,8 @@ def main(ctx: click.Context) -> None:
 @click.option("--show", is_flag=True)
 def liftoff(dir: str, show: bool) -> None:
     click.echo(click.style(f"🚀 Sprocketship lifting off!", fg="white", bold=True))
-    data = render_file(
-        os.path.join(dir, ".sprocketship.yml"), return_dict=True
-    )
+    config_path = Path(dir) / ".sprocketship.yml"
+    data = render_file(config_path, return_dict=True)
     con = connector.connect(**data["snowflake"])
     files = list(Path(dir).rglob("*.js"))
 
@@ -70,11 +68,10 @@ def build(dir: str, target: str) -> None:
     click.echo(click.style(f"⚙️ Building sprocketship!", fg="white", bold=True))
     # Open config in current directory
 
-    Path(os.path.join(dir, target)).mkdir(parents=True, exist_ok=True)
+    (Path(dir) / target).mkdir(parents=True, exist_ok=True)
 
-    data = render_file(
-        os.path.join(dir, ".sprocketship.yml"), return_dict=True
-    )
+    config_path = Path(dir) / ".sprocketship.yml"
+    data = render_file(config_path, return_dict=True)
     files = list(Path(dir).rglob("*.js"))
 
     err = False
@@ -84,8 +81,8 @@ def build(dir: str, target: str) -> None:
             proc_dict = create_javascript_stored_procedure(
                 **proc, **{"project_dir": dir}
             )
-            with open(os.path.join(dir, target, proc["name"] + ".sql"), "w") as f:
-                f.write(proc_dict["rendered_file"])
+            output_path = Path(dir) / target / f"{proc['name']}.sql"
+            output_path.write_text(proc_dict["rendered_file"], encoding="utf-8")
             msg = click.style(f"{proc_dict['name']} ", fg="green", bold=True)
             msg += click.style(f"successfully built", fg="white", bold=True)
             click.echo(msg)
