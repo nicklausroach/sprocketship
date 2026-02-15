@@ -3,29 +3,9 @@
 import pytest
 from pathlib import Path
 from sprocketship.utils import (
-    extract_configs,
     get_file_config,
     create_javascript_stored_procedure,
 )
-
-
-class TestExtractConfigs:
-    """Tests for extract_configs function
-
-    This function appears to be for extracting flat config paths from nested structures.
-    It's imported but not actively used in the main CLI code.
-    """
-
-    def test_path_assignment(self):
-        """Test that paths are assigned correctly to list items"""
-        data = {
-            "test_proc": [{"name": "config1"}, {"name": "config2"}]
-        }
-        result = extract_configs(data)
-        assert "test_proc" in result
-        configs = result["test_proc"]
-        assert configs[0]["path"] == "test_proc"
-        assert configs[1]["path"] == "test_proc"
 
 
 class TestGetFileConfig:
