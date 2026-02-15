@@ -1,13 +1,14 @@
 import click
 import os
-import itertools
+import sys
+import traceback
+from typing import Any
+
 from snowflake import connector
 from absql import render_file
 from pathlib import Path
-import traceback
 
 from .utils import (
-    extract_configs,
     create_javascript_stored_procedure,
     grant_usage,
     get_file_config,
@@ -16,14 +17,14 @@ from .utils import (
 
 @click.group()
 @click.pass_context
-def main(ctx):
+def main(ctx: click.Context) -> None:
     pass
 
 
 @main.command()
 @click.argument("dir", default=".")
 @click.option("--show", is_flag=True)
-def liftoff(dir, show):
+def liftoff(dir: str, show: bool) -> None:
     click.echo(click.style(f"🚀 Sprocketship lifting off!", fg="white", bold=True))
     data = render_file(
         os.path.join(dir, ".sprocketship.yml"), return_dict=True
@@ -67,7 +68,7 @@ def liftoff(dir, show):
 @main.command()
 @click.argument("dir", default=".")
 @click.option("--target", default="target/sprocketship")
-def build(dir, target):
+def build(dir: str, target: str) -> None:
     click.echo(click.style(f"⚙️ Building sprocketship!", fg="white", bold=True))
     # Open config in current directory
 
