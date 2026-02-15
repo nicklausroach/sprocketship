@@ -7,7 +7,6 @@ and building SQL files locally (build).
 import click
 import sys
 import traceback
-from typing import Any
 
 from snowflake import connector
 from absql import render_file
@@ -45,7 +44,7 @@ def liftoff(dir: str, show: bool) -> None:
     Raises:
         SystemExit: Exits with code 1 if any procedure fails to deploy
     """
-    click.echo(click.style(f"🚀 Sprocketship lifting off!", fg="white", bold=True))
+    click.echo(click.style("🚀 Sprocketship lifting off!", fg="white", bold=True))
     config_path = Path(dir) / ".sprocketship.yml"
     data = render_file(config_path, return_dict=True)
     con = connector.connect(**data["snowflake"])
@@ -65,7 +64,7 @@ def liftoff(dir: str, show: bool) -> None:
                 grant_usage(proc_dict, con)
 
             msg = click.style(f"{proc_dict['name']} ", fg="green", bold=True)
-            msg += click.style(f"launched into schema ", fg="white", bold=True)
+            msg += click.style("launched into schema ", fg="white", bold=True)
             msg += click.style(
                 f"{proc_dict['database']}.{proc_dict['schema']}", fg="blue", bold=True
             )
@@ -76,7 +75,7 @@ def liftoff(dir: str, show: bool) -> None:
         except Exception:
             err = True
             msg = click.style(f"{proc['name']} ", fg="red", bold=True)
-            msg += click.style(f"could not be launched.", fg="white", bold=True)
+            msg += click.style("could not be launched.", fg="white", bold=True)
             click.echo(msg)
             click.echo(traceback.format_exc(), err=True)
     sys.exit(1 if err else 0)
@@ -99,7 +98,7 @@ def build(dir: str, target: str) -> None:
     Raises:
         SystemExit: Exits with code 1 if any procedure fails to build
     """
-    click.echo(click.style(f"⚙️ Building sprocketship!", fg="white", bold=True))
+    click.echo(click.style("⚙️ Building sprocketship!", fg="white", bold=True))
     # Open config in current directory
 
     (Path(dir) / target).mkdir(parents=True, exist_ok=True)
@@ -118,12 +117,12 @@ def build(dir: str, target: str) -> None:
             output_path = Path(dir) / target / f"{proc['name']}.sql"
             output_path.write_text(proc_dict["rendered_file"], encoding="utf-8")
             msg = click.style(f"{proc_dict['name']} ", fg="green", bold=True)
-            msg += click.style(f"successfully built", fg="white", bold=True)
+            msg += click.style("successfully built", fg="white", bold=True)
             click.echo(msg)
         except Exception:
             err = True
             msg = click.style(f"{proc['name']} ", fg="red", bold=True)
-            msg += click.style(f"could not be built", fg="white", bold=True)
+            msg += click.style("could not be built", fg="white", bold=True)
             click.echo(msg)
             click.echo(traceback.format_exc(), err=True)
     sys.exit(1 if err else 0)
