@@ -6,7 +6,7 @@ resolution, template rendering, and Snowflake permission grants.
 
 from typing import Any
 
-from absql import render_file
+from absql import render_file  # type: ignore[import-untyped]
 from pathlib import Path
 
 
@@ -67,7 +67,7 @@ def get_file_contents(fpath: str, extra_context: dict[str, Any]) -> dict[str, An
     Returns:
         Dictionary containing rendered content and metadata
     """
-    return render_file(fpath, return_dict=True, extra_context=extra_context)
+    return render_file(fpath, return_dict=True, extra_context=extra_context)  # type: ignore[no-any-return]
 
 
 def create_javascript_stored_procedure(**kwargs: Any) -> dict[str, Any]:

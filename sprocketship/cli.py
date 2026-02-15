@@ -8,8 +8,8 @@ import click
 import sys
 import traceback
 
-from snowflake import connector
-from absql import render_file
+from snowflake import connector  # type: ignore[import-untyped]
+from absql import render_file  # type: ignore[import-untyped]
 from pathlib import Path
 
 from .utils import (
