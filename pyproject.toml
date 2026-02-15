@@ -15,7 +15,8 @@ dependencies = [
     "snowflake-connector-python",
     "ABSQL",
     "ruamel.yaml",
-    "jinja2"
+    "jinja2",
+    "flatdict!=4.0.1"  # Exclude 4.0.1 due to Python 3.9 build issue
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -26,6 +27,20 @@ classifiers = [
 [project.scripts]
 sprocketship = "sprocketship.cli:main"
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov",
+    "pytest-mock",
+    "sqlfluff",  # Optional: for thorough SQL linting
+]
+
 [project.urls]
 Homepage = "https://github.com/nicklausroach/sprocketship"
 Issues = "https://github.com/nicklausroach/sprocketship/issues"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"

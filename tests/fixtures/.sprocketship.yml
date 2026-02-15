@@ -1,0 +1,48 @@
+snowflake:
+  account: test_account
+  user: test_user
+  password: test_password
+  role: sysadmin
+  warehouse: test_warehouse
+
+procedures:
+  +database: default_database
+  +schema: default_schema
+  +language: javascript
+  +execute_as: owner
+
+  admin:
+    +use_role: sysadmin
+    +database: admin_db
+
+    create_database:
+      args:
+        - name: database_name
+          type: varchar
+      returns: varchar
+      comment: |
+        Creates a database with the provided name
+
+    drop_database:
+      args:
+        - name: database_name
+          type: varchar
+      returns: varchar
+
+  useradmin:
+    +use_role: useradmin
+    +schema: user_schema
+
+    create_user:
+      args:
+        - name: username
+          type: varchar
+        - name: password
+          type: varchar
+      returns: varchar
+      grant_usage:
+        role:
+          - analyst
+          - developer
+        user:
+          - admin_user
