@@ -15,7 +15,8 @@ dependencies = [
     "snowflake-connector-python",
     "ABSQL",
     "ruamel.yaml",
-    "jinja2"
+    "jinja2",
+    "flatdict!=4.0.1"  # Exclude 4.0.1 due to Python 3.9 build issue
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
