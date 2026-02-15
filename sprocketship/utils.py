@@ -3,6 +3,39 @@ from absql import render_file
 from pathlib import Path
 
 
+def validate_procedure_config(proc, filename):
+    """Validate that procedure configuration has all required fields.
+
+    Args:
+        proc: Procedure configuration dictionary
+        filename: Filename for error messages
+
+    Raises:
+        ValueError: If required field is missing
+    """
+    required_fields = ["database", "schema", "returns", "language", "execute_as"]
+    missing = [field for field in required_fields if field not in proc or proc[field] is None]
+
+    if missing:
+        raise ValueError(
+            f"Procedure '{filename}' is missing required configuration: {', '.join(missing)}"
+        )
+
+    # Validate language is supported
+    if proc["language"] not in ["javascript", "python"]:
+        raise ValueError(
+            f"Procedure '{filename}' has unsupported language: {proc['language']}. "
+            f"Supported languages: javascript, python"
+        )
+
+    # Validate execute_as value
+    if proc["execute_as"] not in ["owner", "caller"]:
+        raise ValueError(
+            f"Procedure '{filename}' has invalid execute_as value: {proc['execute_as']}. "
+            f"Must be 'owner' or 'caller'"
+        )
+
+
 def extract_configs(data, path=""):
     configs = {}
     for key, value in data.items():
