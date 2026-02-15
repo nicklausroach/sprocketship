@@ -25,10 +25,34 @@ def main(ctx):
 @click.option("--show", is_flag=True)
 def liftoff(dir, show):
     click.echo(click.style(f"🚀 Sprocketship lifting off!", fg="white", bold=True))
-    data = render_file(
-        os.path.join(dir, ".sprocketship.yml"), return_dict=True
-    )
-    con = connector.connect(**data["snowflake"])
+
+    config_path = os.path.join(dir, ".sprocketship.yml")
+    try:
+        data = render_file(config_path, return_dict=True)
+    except FileNotFoundError:
+        msg = click.style("Configuration file not found: ", fg="red", bold=True)
+        msg += click.style(f"{config_path}", fg="white")
+        click.echo(msg, err=True)
+        exit(1)
+    except Exception as e:
+        msg = click.style("Failed to load configuration: ", fg="red", bold=True)
+        msg += click.style(f"{config_path}", fg="white")
+        click.echo(msg, err=True)
+        click.echo(traceback.format_exc(), err=True)
+        exit(1)
+
+    try:
+        con = connector.connect(**data["snowflake"])
+    except KeyError:
+        msg = click.style("Missing 'snowflake' section in configuration file", fg="red", bold=True)
+        click.echo(msg, err=True)
+        exit(1)
+    except Exception as e:
+        msg = click.style("Failed to connect to Snowflake: ", fg="red", bold=True)
+        msg += click.style(str(e), fg="white")
+        click.echo(msg, err=True)
+        exit(1)
+
     files = list(Path(dir).rglob("*.js"))
 
     err = False
@@ -69,13 +93,25 @@ def liftoff(dir, show):
 @click.option("--target", default="target/sprocketship")
 def build(dir, target):
     click.echo(click.style(f"⚙️ Building sprocketship!", fg="white", bold=True))
-    # Open config in current directory
 
+    # Create target directory for rendered procedures
     Path(os.path.join(dir, target)).mkdir(parents=True, exist_ok=True)
 
-    data = render_file(
-        os.path.join(dir, ".sprocketship.yml"), return_dict=True
-    )
+    config_path = os.path.join(dir, ".sprocketship.yml")
+    try:
+        data = render_file(config_path, return_dict=True)
+    except FileNotFoundError:
+        msg = click.style("Configuration file not found: ", fg="red", bold=True)
+        msg += click.style(f"{config_path}", fg="white")
+        click.echo(msg, err=True)
+        exit(1)
+    except Exception as e:
+        msg = click.style("Failed to load configuration: ", fg="red", bold=True)
+        msg += click.style(f"{config_path}", fg="white")
+        click.echo(msg, err=True)
+        click.echo(traceback.format_exc(), err=True)
+        exit(1)
+
     files = list(Path(dir).rglob("*.js"))
 
     err = False
