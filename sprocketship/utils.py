@@ -147,8 +147,12 @@ def grant_usage(proc: dict[str, Any], con: SnowflakeConnection) -> None:
         proc: Procedure dictionary containing 'grant_usage', 'database', 'schema', 'name', 'args'
         con: Snowflake connection object
     """
-    types = [arg["type"] for arg in proc["args"]]
-    types_str = f"({','.join(types)})"
+    # Handle procedures without arguments
+    if "args" not in proc or proc["args"] is None:
+        types_str = "()"
+    else:
+        types = [arg["type"] for arg in proc["args"]]
+        types_str = f"({','.join(types)})" if types else "()"
 
     database = quote_identifier(proc['database'])
     schema = quote_identifier(proc['schema'])
