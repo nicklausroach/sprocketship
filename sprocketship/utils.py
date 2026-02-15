@@ -4,7 +4,6 @@ This module provides helper functions for configuration merging, file path
 resolution, template rendering, and Snowflake permission grants.
 """
 
-import os
 from typing import Any
 
 from absql import render_file
@@ -27,7 +26,8 @@ def get_file_config(path: Path, config: dict[str, Any], dir: str) -> dict[str, A
         Merged configuration dictionary with 'path' and 'name' keys
     """
     filename = path.stem
-    keys = ["procedures"] + str(path.relative_to(dir)).split("/")[:-1] + [filename]
+    relative_path = path.relative_to(dir)
+    keys = ["procedures"] + list(relative_path.parts[:-1]) + [filename]
 
     file_config = {"path": str(path), "name": filename}
     curr_config = config
@@ -54,7 +54,7 @@ def get_full_file_path(proc_config: dict[str, Any]) -> str:
     """
     extension_map = {"javascript": ".js", "python": ".py"}
     file_name = proc_config["name"] + extension_map[proc_config["language"]]
-    return os.path.join("procedures", proc_config["path"], file_name)
+    return str(Path("procedures") / proc_config["path"] / file_name)
 
 
 def get_file_contents(fpath: str, extra_context: dict[str, Any]) -> dict[str, Any]:
@@ -92,7 +92,7 @@ def create_javascript_stored_procedure(**kwargs: Any) -> dict[str, Any]:
 
     # Render the stored procedure template with the procedure definition
     rendered_file = render_file(
-        os.path.join(Path(__file__).parent, "templates/javascript.sql"), **context
+        str(Path(__file__).parent / "templates" / "javascript.sql"), **context
     )
     return {**kwargs, "rendered_file": rendered_file}
 
