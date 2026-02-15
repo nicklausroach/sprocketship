@@ -5,6 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sprocketship"
 version = "1.0.4"
+requires-python = ">=3.9"
 authors = [
   { name="Nicklaus Roach", email="nicklausroach@gmail.com" },
 ]
@@ -23,9 +24,25 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "mypy>=1.0",
+    "ruff>=0.1.0",
+]
+
 [project.scripts]
 sprocketship = "sprocketship.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/nicklausroach/sprocketship"
 Issues = "https://github.com/nicklausroach/sprocketship/issues"
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
