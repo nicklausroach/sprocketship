@@ -18,7 +18,10 @@ def extract_configs(data, path=""):
 
 def get_file_config(path: Path, config: dict, dir: str):
     filename = path.stem
-    keys = ["procedures"] + str(path.relative_to(dir)).split("/")[:-1] + [filename]
+    relative_path = path.relative_to(dir)
+    # Use Path.parts for cross-platform compatibility
+    path_parts = list(relative_path.parts[:-1])  # Exclude filename from parts
+    keys = ["procedures"] + path_parts + [filename]
 
     file_config = {"path": str(path), "name": filename}
     curr_config = config
