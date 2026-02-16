@@ -31,7 +31,8 @@ def main(ctx: click.Context) -> None:
 @main.command()
 @click.argument("directory", default=".")
 @click.option("--show", is_flag=True)
-def liftoff(directory: str, show: bool) -> None:
+@click.option("--only", multiple=True, help="Deploy only specified procedure(s). Can be used multiple times.")
+def liftoff(directory: str, show: bool, only: tuple[str, ...]) -> None:
     """Deploy stored procedures to Snowflake.
 
     Discovers all .js files in the procedures/ directory, renders them
@@ -42,6 +43,7 @@ def liftoff(directory: str, show: bool) -> None:
     Args:
         directory: Directory containing .sprocketship.yml and procedures/
         show: If True, print rendered SQL to stdout after deployment
+        only: Tuple of procedure names to deploy (if empty, deploys all)
 
     Raises:
         SystemExit: Exits with code 1 if any procedure fails to deploy
@@ -77,6 +79,24 @@ def liftoff(directory: str, show: bool) -> None:
 
 
     files = list(Path(directory).rglob("*.js"))
+
+    # Filter files if --only flag is provided
+    if only:
+        filtered_files = []
+        for file in files:
+            proc_name = file.stem  # Get filename without extension
+            if proc_name in only:
+                filtered_files.append(file)
+
+        # Warn if any specified procedures were not found
+        found_names = {f.stem for f in filtered_files}
+        not_found = set(only) - found_names
+        if not_found:
+            msg = click.style("Warning: ", fg="yellow", bold=True)
+            msg += click.style(f"Could not find procedure(s): {', '.join(sorted(not_found))}", fg="white")
+            click.echo(msg, err=True)
+
+        files = filtered_files
 
     err = False
     for file in files:
@@ -115,7 +135,8 @@ def liftoff(directory: str, show: bool) -> None:
 @main.command()
 @click.argument("directory", default=".")
 @click.option("--target", default="target/sprocketship")
-def build(directory: str, target: str) -> None:
+@click.option("--only", multiple=True, help="Build only specified procedure(s). Can be used multiple times.")
+def build(directory: str, target: str, only: tuple[str, ...]) -> None:
     """Build SQL files locally without deploying to Snowflake.
 
     Discovers all .js files in the procedures/ directory, renders them
@@ -125,6 +146,7 @@ def build(directory: str, target: str) -> None:
     Args:
         directory: Directory containing .sprocketship.yml and procedures/
         target: Output directory for generated SQL files (relative to directory)
+        only: Tuple of procedure names to build (if empty, builds all)
 
     Raises:
         SystemExit: Exits with code 1 if any procedure fails to build
@@ -151,6 +173,24 @@ def build(directory: str, target: str) -> None:
 
 
     files = list(Path(directory).rglob("*.js"))
+
+    # Filter files if --only flag is provided
+    if only:
+        filtered_files = []
+        for file in files:
+            proc_name = file.stem  # Get filename without extension
+            if proc_name in only:
+                filtered_files.append(file)
+
+        # Warn if any specified procedures were not found
+        found_names = {f.stem for f in filtered_files}
+        not_found = set(only) - found_names
+        if not_found:
+            msg = click.style("Warning: ", fg="yellow", bold=True)
+            msg += click.style(f"Could not find procedure(s): {', '.join(sorted(not_found))}", fg="white")
+            click.echo(msg, err=True)
+
+        files = filtered_files
 
     err = False
     for file in files:
