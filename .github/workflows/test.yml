@@ -74,6 +74,36 @@ jobs:
         # Validate any SQL templates in the codebase
         sqlfluff lint sprocketship/templates/ --dialect snowflake || true
 
+  code-quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[dev]"
+
+    - name: Run ruff linter
+      run: |
+        ruff check sprocketship tests
+
+    - name: Run mypy type checker
+      run: |
+        mypy sprocketship
+
+    - name: Check for dead code with vulture
+      run: |
+        vulture sprocketship --min-confidence 80
+
   integration:
     name: Integration Test - Build Command
     runs-on: ubuntu-latest
@@ -109,7 +139,7 @@ jobs:
   status-check:
     # This job is used as a status check for branch protection
     name: All tests passed
-    needs: [test, lint, integration]
+    needs: [test, lint, code-quality, integration]
     runs-on: ubuntu-latest
     if: always()
 
@@ -120,6 +150,10 @@ jobs:
 
     - name: Check lint status
       if: needs.lint.result != 'success'
+      run: exit 1
+
+    - name: Check code quality status
+      if: needs.code-quality.result != 'success'
       run: exit 1
 
     - name: Check integration status
