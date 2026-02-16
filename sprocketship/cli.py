@@ -17,6 +17,7 @@ from .utils import (
     grant_usage,
     get_file_config,
     quote_identifier,
+    validate_procedure_config,
 )
 
 
@@ -81,6 +82,9 @@ def liftoff(directory: str, show: bool) -> None:
     for file in files:
         proc = get_file_config(file, data, directory)
         try:
+            # Validate configuration before processing
+            validate_procedure_config(proc, proc.get("name", str(file)))
+
             proc_dict = create_javascript_stored_procedure(
                 **proc, **{"project_dir": directory}
             )
@@ -152,6 +156,9 @@ def build(directory: str, target: str) -> None:
     for file in files:
         proc = get_file_config(file, data, directory)
         try:
+            # Validate configuration before processing
+            validate_procedure_config(proc, proc.get("name", str(file)))
+
             proc_dict = create_javascript_stored_procedure(
                 **proc, **{"project_dir": directory}
             )
