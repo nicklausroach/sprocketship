@@ -50,7 +50,7 @@ def quote_identifier(identifier: str) -> str:
     return f'"{escaped}"'
 
 
-def get_file_config(path: Path, config: dict[str, Any], dir: str) -> dict[str, Any]:
+def get_file_config(path: Path, config: dict[str, Any], directory: str) -> dict[str, Any]:
     """Merge hierarchical configuration for a procedure file.
 
     Walks through the config tree matching the file path structure,
@@ -60,13 +60,13 @@ def get_file_config(path: Path, config: dict[str, Any], dir: str) -> dict[str, A
     Args:
         path: Path to the procedure file
         config: Parsed configuration from .sprocketship.yml
-        dir: Base directory path
+        directory: Base directory path
 
     Returns:
         Merged configuration dictionary with 'path' and 'name' keys
     """
     filename = path.stem
-    relative_path = path.relative_to(dir)
+    relative_path = path.relative_to(directory)
     keys = ["procedures"] + list(relative_path.parts[:-1]) + [filename]
 
     file_config = {"path": str(path), "name": filename}
