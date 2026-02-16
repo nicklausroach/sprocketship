@@ -13,6 +13,7 @@ from absql import render_file  # type: ignore[import-untyped]
 from pathlib import Path
 
 from .utils import (
+    ConfigurationError,
     create_javascript_stored_procedure,
     grant_usage,
     get_file_config,
@@ -52,9 +53,26 @@ def liftoff(directory: str, show: bool) -> None:
     try:
         data = render_file(config_path, return_dict=True)
     except FileNotFoundError:
-        msg = click.style("Configuration file not found: ", fg="red", bold=True)
-        msg += click.style(f"{config_path}", fg="white")
-        click.echo(msg, err=True)
+        error_msg = f"""[E001] Configuration file not found: {config_path}
+
+Expected location:
+  {config_path.absolute()}
+
+Fix: Create a .sprocketship.yml file with required configuration:
+  snowflake:
+    account: !env_var SNOWFLAKE_ACCOUNT
+    user: !env_var SNOWFLAKE_USER
+    password: !env_var SNOWFLAKE_PASSWORD
+    role: !env_var SNOWFLAKE_ROLE
+    warehouse: !env_var SNOWFLAKE_WAREHOUSE
+
+  procedures:
+    +database: YOUR_DATABASE
+    +schema: YOUR_SCHEMA
+    +language: javascript
+    +execute_as: owner
+"""
+        click.echo(click.style(error_msg, fg="red"), err=True)
         sys.exit(1)
     except Exception:
         msg = click.style("Failed to load configuration: ", fg="red", bold=True)
@@ -66,13 +84,40 @@ def liftoff(directory: str, show: bool) -> None:
     try:
         con = connector.connect(**data["snowflake"])
     except KeyError:
-        msg = click.style("Missing 'snowflake' section in configuration file", fg="red", bold=True)
-        click.echo(msg, err=True)
+        error_msg = """[E004] Missing 'snowflake' section in configuration file
+
+The configuration file must include a 'snowflake' section with connection details.
+
+Fix: Add to .sprocketship.yml:
+  snowflake:
+    account: !env_var SNOWFLAKE_ACCOUNT
+    user: !env_var SNOWFLAKE_USER
+    password: !env_var SNOWFLAKE_PASSWORD
+    role: !env_var SNOWFLAKE_ROLE
+    warehouse: !env_var SNOWFLAKE_WAREHOUSE
+
+Make sure to set the corresponding environment variables.
+"""
+        click.echo(click.style(error_msg, fg="red"), err=True)
         sys.exit(1)
     except Exception as e:
-        msg = click.style("Failed to connect to Snowflake: ", fg="red", bold=True)
-        msg += click.style(str(e), fg="white")
-        click.echo(msg, err=True)
+        error_msg = f"""[E005] Failed to connect to Snowflake
+
+Error: {e}
+
+Troubleshooting:
+  1. Verify environment variables are set:
+     - SNOWFLAKE_ACCOUNT
+     - SNOWFLAKE_USER
+     - SNOWFLAKE_PASSWORD
+     - SNOWFLAKE_ROLE
+     - SNOWFLAKE_WAREHOUSE
+
+  2. Check network connectivity to Snowflake
+
+  3. Verify credentials are correct
+"""
+        click.echo(click.style(error_msg, fg="red"), err=True)
         sys.exit(1)
 
 
@@ -103,6 +148,10 @@ def liftoff(directory: str, show: bool) -> None:
             click.echo(msg)
             if show:
                 click.echo(proc_dict["rendered_file"])
+        except ConfigurationError as e:
+            err = True
+            # ConfigurationError already has nice formatting, so just print it
+            click.echo(click.style(str(e), fg="red"), err=True)
         except Exception:
             err = True
             msg = click.style(f"{proc['name']} ", fg="red", bold=True)
@@ -138,9 +187,26 @@ def build(directory: str, target: str) -> None:
     try:
         data = render_file(config_path, return_dict=True)
     except FileNotFoundError:
-        msg = click.style("Configuration file not found: ", fg="red", bold=True)
-        msg += click.style(f"{config_path}", fg="white")
-        click.echo(msg, err=True)
+        error_msg = f"""[E001] Configuration file not found: {config_path}
+
+Expected location:
+  {config_path.absolute()}
+
+Fix: Create a .sprocketship.yml file with required configuration:
+  snowflake:
+    account: !env_var SNOWFLAKE_ACCOUNT
+    user: !env_var SNOWFLAKE_USER
+    password: !env_var SNOWFLAKE_PASSWORD
+    role: !env_var SNOWFLAKE_ROLE
+    warehouse: !env_var SNOWFLAKE_WAREHOUSE
+
+  procedures:
+    +database: YOUR_DATABASE
+    +schema: YOUR_SCHEMA
+    +language: javascript
+    +execute_as: owner
+"""
+        click.echo(click.style(error_msg, fg="red"), err=True)
         sys.exit(1)
     except Exception:
         msg = click.style("Failed to load configuration: ", fg="red", bold=True)
@@ -167,6 +233,10 @@ def build(directory: str, target: str) -> None:
             msg = click.style(f"{proc_dict['name']} ", fg="green", bold=True)
             msg += click.style("successfully built", fg="white", bold=True)
             click.echo(msg)
+        except ConfigurationError as e:
+            err = True
+            # ConfigurationError already has nice formatting, so just print it
+            click.echo(click.style(str(e), fg="red"), err=True)
         except Exception:
             err = True
             msg = click.style(f"{proc['name']} ", fg="red", bold=True)

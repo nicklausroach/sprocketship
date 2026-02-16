@@ -4,10 +4,30 @@ This module provides helper functions for configuration merging, file path
 resolution, template rendering, and Snowflake permission grants.
 """
 
-from typing import Any, Protocol
+from typing import Any, Optional, Protocol
 
 from absql import render_file  # type: ignore[import-untyped]
 from pathlib import Path
+
+
+class ConfigurationError(Exception):
+    """Base exception for configuration errors with enhanced formatting.
+
+    Provides detailed error messages with context, suggestions, and examples
+    to help users quickly identify and fix configuration issues.
+    """
+
+    def __init__(self, message: str, error_code: Optional[str] = None) -> None:
+        """Initialize configuration error with optional error code.
+
+        Args:
+            message: Detailed error message
+            error_code: Optional error code for reference (e.g., 'E001')
+        """
+        if error_code:
+            message = f"[{error_code}] {message}"
+        super().__init__(message)
+        self.error_code = error_code
 
 
 class SnowflakeConnection(Protocol):
@@ -35,29 +55,89 @@ def validate_procedure_config(proc: dict[str, Any], filename: str) -> None:
         filename: Filename for error messages
 
     Raises:
-        ValueError: If required field is missing or invalid
+        ConfigurationError: If required field is missing or invalid
     """
     required_fields = ["database", "schema", "returns", "language", "execute_as"]
     missing = [field for field in required_fields if field not in proc or proc[field] is None]
 
+    file_path = proc.get("path", filename)
+
     if missing:
-        raise ValueError(
-            f"Procedure '{filename}' is missing required configuration: {', '.join(missing)}"
-        )
+        # Build detailed error message with suggestions
+        fields_list = "\n  - ".join(missing)
+        frontmatter_examples = []
+        yaml_examples = []
+
+        for field in missing:
+            if field == "returns":
+                frontmatter_examples.append(f"{field}: varchar")
+                yaml_examples.append(f"{field}: varchar")
+            elif field == "language":
+                frontmatter_examples.append(f"{field}: javascript")
+                yaml_examples.append(f"{field}: javascript")
+            elif field == "execute_as":
+                frontmatter_examples.append(f"{field}: owner")
+                yaml_examples.append(f"{field}: owner")
+            else:
+                frontmatter_examples.append(f"{field}: YOUR_{field.upper()}_NAME")
+                yaml_examples.append(f"{field}: YOUR_{field.upper()}_NAME")
+
+        frontmatter_section = "\n  ".join(frontmatter_examples)
+        yaml_section = "\n    ".join(yaml_examples)
+
+        # Get relative path for cleaner display
+        display_path = Path(file_path).name if "/" in str(file_path) else file_path
+
+        message = f"""Error in procedure: {display_path}
+
+Missing required configuration fields:
+  - {fields_list}
+
+Fix option 1 - Add to file frontmatter:
+  /*
+  {frontmatter_section}
+  */
+
+Fix option 2 - Add to .sprocketship.yml:
+  procedures:
+    {filename}:
+    {yaml_section}
+
+For cascading defaults (applies to all procedures), use '+' prefix:
+  procedures:
+    +{yaml_examples[0]}
+"""
+        raise ConfigurationError(message, error_code="E002")
 
     # Validate language is supported
     if proc["language"] not in ["javascript", "python"]:
-        raise ValueError(
-            f"Procedure '{filename}' has unsupported language: {proc['language']}. "
-            f"Supported languages: javascript, python"
-        )
+        message = f"""Error in procedure: {Path(file_path).name if "/" in str(file_path) else file_path}
+
+Unsupported language: '{proc['language']}'
+
+Supported languages:
+  - javascript
+  - python
+
+Fix: Update language field to a supported value:
+  language: javascript
+"""
+        raise ConfigurationError(message, error_code="E003")
 
     # Validate execute_as value
     if proc["execute_as"] not in ["owner", "caller"]:
-        raise ValueError(
-            f"Procedure '{filename}' has invalid execute_as value: {proc['execute_as']}. "
-            f"Must be 'owner' or 'caller'"
-        )
+        message = f"""Error in procedure: {Path(file_path).name if "/" in str(file_path) else file_path}
+
+Invalid execute_as value: '{proc['execute_as']}'
+
+Valid values:
+  - owner  (procedure runs with owner's privileges)
+  - caller (procedure runs with caller's privileges)
+
+Fix: Update execute_as field:
+  execute_as: owner
+"""
+        raise ConfigurationError(message, error_code="E003")
 
 
 def quote_identifier(identifier: str) -> str:

@@ -3,8 +3,10 @@
 import pytest
 from pathlib import Path
 from sprocketship.utils import (
+    ConfigurationError,
     get_file_config,
     create_javascript_stored_procedure,
+    validate_procedure_config,
 )
 
 
@@ -140,3 +142,130 @@ class TestCreateJavascriptStoredProcedure:
         assert "COMMENT = '" in result["rendered_file"]
         assert "This is a test procedure" in result["rendered_file"]
         assert "with multiple lines" in result["rendered_file"]
+
+
+class TestValidateProcedureConfig:
+    """Tests for validate_procedure_config function"""
+
+    def test_valid_config_passes(self):
+        """Test that a valid configuration passes validation"""
+        config = {
+            "database": "test_db",
+            "schema": "test_schema",
+            "returns": "varchar",
+            "language": "javascript",
+            "execute_as": "owner",
+            "path": "test.js",
+        }
+        # Should not raise any exception
+        validate_procedure_config(config, "test")
+
+    def test_missing_database_raises_error(self):
+        """Test that missing database field raises ConfigurationError"""
+        config = {
+            "schema": "test_schema",
+            "returns": "varchar",
+            "language": "javascript",
+            "execute_as": "owner",
+        }
+        with pytest.raises(ConfigurationError) as exc_info:
+            validate_procedure_config(config, "test")
+
+        assert "[E002]" in str(exc_info.value)
+        assert "database" in str(exc_info.value).lower()
+        assert "Missing required configuration fields" in str(exc_info.value)
+
+    def test_missing_multiple_fields_raises_error(self):
+        """Test that missing multiple fields are all reported"""
+        config = {
+            "database": "test_db",
+            # Missing: schema, returns, language, execute_as
+        }
+        with pytest.raises(ConfigurationError) as exc_info:
+            validate_procedure_config(config, "test")
+
+        error_msg = str(exc_info.value)
+        assert "schema" in error_msg
+        assert "returns" in error_msg
+        assert "language" in error_msg
+        assert "execute_as" in error_msg
+
+    def test_invalid_language_raises_error(self):
+        """Test that invalid language value raises ConfigurationError"""
+        config = {
+            "database": "test_db",
+            "schema": "test_schema",
+            "returns": "varchar",
+            "language": "ruby",  # Invalid language
+            "execute_as": "owner",
+        }
+        with pytest.raises(ConfigurationError) as exc_info:
+            validate_procedure_config(config, "test")
+
+        assert "[E003]" in str(exc_info.value)
+        assert "Unsupported language" in str(exc_info.value)
+        assert "ruby" in str(exc_info.value)
+
+    def test_invalid_execute_as_raises_error(self):
+        """Test that invalid execute_as value raises ConfigurationError"""
+        config = {
+            "database": "test_db",
+            "schema": "test_schema",
+            "returns": "varchar",
+            "language": "javascript",
+            "execute_as": "admin",  # Invalid execute_as
+        }
+        with pytest.raises(ConfigurationError) as exc_info:
+            validate_procedure_config(config, "test")
+
+        assert "[E003]" in str(exc_info.value)
+        assert "Invalid execute_as value" in str(exc_info.value)
+        assert "admin" in str(exc_info.value)
+
+    def test_error_includes_fix_suggestions(self):
+        """Test that errors include helpful fix suggestions"""
+        config = {
+            "database": "test_db",
+            "schema": "test_schema",
+            # Missing: returns, language, execute_as
+        }
+        with pytest.raises(ConfigurationError) as exc_info:
+            validate_procedure_config(config, "test_proc")
+
+        error_msg = str(exc_info.value)
+        # Should suggest both frontmatter and YAML fixes
+        assert "Fix option 1" in error_msg
+        assert "Fix option 2" in error_msg
+        assert "frontmatter" in error_msg.lower()
+        assert ".sprocketship.yml" in error_msg
+
+    def test_none_values_treated_as_missing(self):
+        """Test that None values are treated as missing fields"""
+        config = {
+            "database": "test_db",
+            "schema": None,  # None should be treated as missing
+            "returns": "varchar",
+            "language": "javascript",
+            "execute_as": "owner",
+        }
+        with pytest.raises(ConfigurationError) as exc_info:
+            validate_procedure_config(config, "test")
+
+        assert "schema" in str(exc_info.value)
+
+
+class TestConfigurationError:
+    """Tests for ConfigurationError exception class"""
+
+    def test_error_without_code(self):
+        """Test ConfigurationError without error code"""
+        error = ConfigurationError("Test error message")
+        assert str(error) == "Test error message"
+        assert error.error_code is None
+
+    def test_error_with_code(self):
+        """Test ConfigurationError with error code"""
+        error = ConfigurationError("Test error message", error_code="E001")
+        assert "[E001]" in str(error)
+        assert "Test error message" in str(error)
+        assert error.error_code == "E001"
