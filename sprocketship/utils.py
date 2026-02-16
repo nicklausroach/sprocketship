@@ -4,7 +4,7 @@ This module provides helper functions for configuration merging, file path
 resolution, template rendering, and Snowflake permission grants.
 """
 
-from typing import Any, Protocol
+from typing import Any, Optional, Protocol
 
 from absql import render_file  # type: ignore[import-untyped]
 from pathlib import Path
@@ -17,7 +17,7 @@ class ConfigurationError(Exception):
     to help users quickly identify and fix configuration issues.
     """
 
-    def __init__(self, message: str, error_code: str | None = None) -> None:
+    def __init__(self, message: str, error_code: Optional[str] = None) -> None:
         """Initialize configuration error with optional error code.
 
         Args:
