@@ -14,6 +14,7 @@ from pathlib import Path
 
 from .utils import (
     create_javascript_stored_procedure,
+    filter_procedures,
     grant_usage,
     get_file_config,
     quote_identifier,
@@ -81,22 +82,11 @@ def liftoff(directory: str, show: bool, only: tuple[str, ...]) -> None:
     files = list(Path(directory).rglob("*.js"))
 
     # Filter files if --only flag is provided
-    if only:
-        filtered_files = []
-        for file in files:
-            proc_name = file.stem  # Get filename without extension
-            if proc_name in only:
-                filtered_files.append(file)
-
-        # Warn if any specified procedures were not found
-        found_names = {f.stem for f in filtered_files}
-        not_found = set(only) - found_names
-        if not_found:
-            msg = click.style("Warning: ", fg="yellow", bold=True)
-            msg += click.style(f"Could not find procedure(s): {', '.join(sorted(not_found))}", fg="white")
-            click.echo(msg, err=True)
-
-        files = filtered_files
+    files, not_found = filter_procedures(files, only)
+    if not_found:
+        msg = click.style("Warning: ", fg="yellow", bold=True)
+        msg += click.style(f"Could not find procedure(s): {', '.join(sorted(not_found))}", fg="white")
+        click.echo(msg, err=True)
 
     err = False
     for file in files:
@@ -175,22 +165,11 @@ def build(directory: str, target: str, only: tuple[str, ...]) -> None:
     files = list(Path(directory).rglob("*.js"))
 
     # Filter files if --only flag is provided
-    if only:
-        filtered_files = []
-        for file in files:
-            proc_name = file.stem  # Get filename without extension
-            if proc_name in only:
-                filtered_files.append(file)
-
-        # Warn if any specified procedures were not found
-        found_names = {f.stem for f in filtered_files}
-        not_found = set(only) - found_names
-        if not_found:
-            msg = click.style("Warning: ", fg="yellow", bold=True)
-            msg += click.style(f"Could not find procedure(s): {', '.join(sorted(not_found))}", fg="white")
-            click.echo(msg, err=True)
-
-        files = filtered_files
+    files, not_found = filter_procedures(files, only)
+    if not_found:
+        msg = click.style("Warning: ", fg="yellow", bold=True)
+        msg += click.style(f"Could not find procedure(s): {', '.join(sorted(not_found))}", fg="white")
+        click.echo(msg, err=True)
 
     err = False
     for file in files:

@@ -10,6 +10,35 @@ from absql import render_file  # type: ignore[import-untyped]
 from pathlib import Path
 
 
+def filter_procedures(files: list[Path], only: tuple[str, ...]) -> tuple[list[Path], set[str]]:
+    """Filter procedure files based on --only flag.
+
+    Args:
+        files: List of procedure file paths
+        only: Tuple of procedure names to include (empty means include all)
+
+    Returns:
+        Tuple of (filtered_files, not_found_names) where:
+        - filtered_files: List of files matching the --only filter
+        - not_found_names: Set of procedure names that were requested but not found
+    """
+    if not only:
+        # No filter specified, return all files
+        return files, set()
+
+    filtered_files = []
+    for file in files:
+        proc_name = file.stem  # Get filename without extension
+        if proc_name in only:
+            filtered_files.append(file)
+
+    # Identify requested procedures that weren't found
+    found_names = {f.stem for f in filtered_files}
+    not_found = set(only) - found_names
+
+    return filtered_files, not_found
+
+
 class SnowflakeConnection(Protocol):
     """Protocol for Snowflake database connection objects.
 
