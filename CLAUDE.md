@@ -6,6 +6,30 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Sprocketship is a Python CLI tool for managing Snowflake stored procedures. It separates procedure code from configuration, uses Jinja2 templating to generate CREATE PROCEDURE statements, and supports hierarchical configuration with file frontmatter overrides.
 
+## Coding Standards
+
+**All code changes MUST align with dignified Python standards.**
+
+### Core Principles
+1. **LBYL over EAFP**: Always check conditions before acting, never use exceptions for control flow
+   - ✅ Use `if key in mapping:` or `.get(key, default)`
+   - ❌ Never use try/except KeyError for dictionary access
+2. **Pathlib everywhere**: Always use `pathlib.Path`, never `os.path`
+   - Always specify encoding: `path.read_text(encoding="utf-8")`
+3. **CLI patterns**:
+   - Use `click.echo()` (never `print()`)
+   - Use `err=True` for error output
+   - Use `sys.exit(1)` for error exits
+4. **Type hints required**: All functions must have parameter and return type annotations
+5. **Exceptions only at error boundaries**: CLI/API level, third-party API wrapping, or adding context before re-raising
+
+### When to Review Standards
+Use the `/dignified-python` skill when:
+- Writing or reviewing Python code
+- Unsure about exception handling patterns
+- Working with paths, imports, or CLI code
+- Before submitting PRs
+
 ## Core Commands
 
 ### Deploy to Snowflake
