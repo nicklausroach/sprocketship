@@ -4,3 +4,8 @@ dist/
 build/
 **/__pycache__/
 sprocketship/example/target
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/

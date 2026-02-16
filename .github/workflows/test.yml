@@ -1,0 +1,130 @@
+name: Run Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Test on Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[dev]"
+
+    - name: Run tests with pytest
+      run: |
+        pytest -v --cov=sprocketship --cov-report=term-missing --cov-report=xml
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      if: matrix.python-version == '3.12'
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+    - name: Check test coverage threshold
+      if: matrix.python-version == '3.12'
+      run: |
+        coverage report --fail-under=80
+
+  lint:
+    name: Lint and SQL Validation
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[dev]"
+
+    - name: Run SQL validation tests
+      run: |
+        pytest tests/test_sql_validation.py -v
+
+    - name: Check for SQL issues with sqlfluff
+      run: |
+        # Validate any SQL templates in the codebase
+        sqlfluff lint sprocketship/templates/ --dialect snowflake || true
+
+  integration:
+    name: Integration Test - Build Command
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+        cache: 'pip'
+
+    - name: Install sprocketship
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .
+
+    - name: Test build command with example
+      run: |
+        # Test that build command works end-to-end
+        sprocketship build tests/fixtures --target /tmp/test-output
+        # Verify files were created
+        ls -la /tmp/test-output/
+        # Verify SQL was generated correctly
+        grep -q "CREATE OR REPLACE PROCEDURE" /tmp/test-output/*.sql
+
+    - name: Verify CLI is installed
+      run: |
+        sprocketship --help
+        which sprocketship
+
+  status-check:
+    # This job is used as a status check for branch protection
+    name: All tests passed
+    needs: [test, lint, integration]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+    - name: Check test matrix status
+      if: needs.test.result != 'success'
+      run: exit 1
+
+    - name: Check lint status
+      if: needs.lint.result != 'success'
+      run: exit 1
+
+    - name: Check integration status
+      if: needs.integration.result != 'success'
+      run: exit 1
+
+    - name: All checks passed
+      run: echo "✅ All tests passed!"
