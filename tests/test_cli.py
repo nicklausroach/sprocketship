@@ -170,10 +170,10 @@ class TestLiftoffCommand:
             # Check that role switching happened
             execute_calls = [call[0][0] for call in mock_cursor.execute.call_args_list]
 
-            # Should have USE ROLE SYSADMIN for admin procedures
-            assert any("USE ROLE SYSADMIN" in call for call in execute_calls)
-            # Should have USE ROLE USERADMIN for useradmin procedures
-            assert any("USE ROLE USERADMIN" in call for call in execute_calls)
+            # Should have USE ROLE "SYSADMIN" for admin procedures (quoted for SQL injection prevention)
+            assert any('USE ROLE "SYSADMIN"' in call for call in execute_calls)
+            # Should have USE ROLE "USERADMIN" for useradmin procedures
+            assert any('USE ROLE "USERADMIN"' in call for call in execute_calls)
 
     @patch("sprocketship.cli.connector.connect")
     def test_liftoff_with_grant_usage(self, mock_connect, cli_runner, fixture_dir):
@@ -196,7 +196,8 @@ class TestLiftoffCommand:
             # create_user has grant_usage config, so should have grant statements
             assert len(grant_calls) > 0
             assert any("GRANT USAGE ON PROCEDURE" in call for call in grant_calls)
-            assert any("TO role analyst" in call or "TO ROLE analyst" in call.upper() for call in grant_calls)
+            # Identifiers are now quoted for SQL injection prevention
+            assert any('TO ROLE "analyst"' in call for call in grant_calls)
 
     @patch("sprocketship.cli.connector.connect")
     def test_liftoff_show_flag(self, mock_connect, cli_runner, fixture_dir):
