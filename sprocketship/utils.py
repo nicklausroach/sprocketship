@@ -4,10 +4,50 @@ This module provides helper functions for configuration merging, file path
 resolution, template rendering, and Snowflake permission grants.
 """
 
-from typing import Any
+from typing import Any, Protocol
 
 from absql import render_file  # type: ignore[import-untyped]
 from pathlib import Path
+
+
+class SnowflakeConnection(Protocol):
+    """Protocol for Snowflake database connection objects.
+
+    This protocol defines the interface for Snowflake connections used
+    in this module. The actual implementation is provided by the
+    snowflake-connector-python library.
+    """
+
+    def cursor(self) -> Any:
+        """Return a cursor object for executing SQL statements.
+
+        Returns:
+            Cursor object for SQL execution
+        """
+        ...
+
+
+def quote_identifier(identifier: str) -> str:
+    """Quote a Snowflake identifier to prevent SQL injection.
+
+    Wraps identifiers in double quotes and escapes any internal double quotes
+    by doubling them, following Snowflake's identifier quoting rules.
+
+    Args:
+        identifier: The identifier to quote (database, schema, role, etc.)
+
+    Returns:
+        Properly quoted identifier safe for use in SQL statements
+
+    Example:
+        >>> quote_identifier("my_database")
+        '"my_database"'
+        >>> quote_identifier('my"weird"name')
+        '"my""weird""name"'
+    """
+    # Escape internal double quotes by doubling them
+    escaped = identifier.replace('"', '""')
+    return f'"{escaped}"'
 
 
 def get_file_config(path: Path, config: dict[str, Any], dir: str) -> dict[str, Any]:
@@ -97,10 +137,11 @@ def create_javascript_stored_procedure(**kwargs: Any) -> dict[str, Any]:
     return {**kwargs, "rendered_file": rendered_file}
 
 
-def grant_usage(proc: dict[str, Any], con: Any) -> None:
+def grant_usage(proc: dict[str, Any], con: SnowflakeConnection) -> None:
     """Execute GRANT USAGE statements for a procedure.
 
     Grants procedure usage permissions to specified roles and users.
+    Uses proper identifier quoting to prevent SQL injection.
 
     Args:
         proc: Procedure dictionary containing 'grant_usage', 'database', 'schema', 'name', 'args'
@@ -108,7 +149,14 @@ def grant_usage(proc: dict[str, Any], con: Any) -> None:
     """
     types = [arg["type"] for arg in proc["args"]]
     types_str = f"({','.join(types)})"
+
+    database = quote_identifier(proc['database'])
+    schema = quote_identifier(proc['schema'])
+    proc_name = quote_identifier(proc['name'])
+
     for grantee_type in proc["grant_usage"]:
+        grantee_type_upper = grantee_type.upper()
         for grantee in proc["grant_usage"][grantee_type]:
-            query = f"GRANT USAGE ON PROCEDURE {proc['database']}.{proc['schema']}.{proc['name']}{types_str} TO {grantee_type} {grantee}"
+            grantee_quoted = quote_identifier(grantee)
+            query = f"GRANT USAGE ON PROCEDURE {database}.{schema}.{proc_name}{types_str} TO {grantee_type_upper} {grantee_quoted}"
             con.cursor().execute(query)

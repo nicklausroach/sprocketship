@@ -16,6 +16,7 @@ from .utils import (
     create_javascript_stored_procedure,
     grant_usage,
     get_file_config,
+    quote_identifier,
 )
 
 
@@ -27,9 +28,9 @@ def main(ctx: click.Context) -> None:
 
 
 @main.command()
-@click.argument("dir", default=".")
+@click.argument("directory", default=".")
 @click.option("--show", is_flag=True)
-def liftoff(dir: str, show: bool) -> None:
+def liftoff(directory: str, show: bool) -> None:
     """Deploy stored procedures to Snowflake.
 
     Discovers all .js files in the procedures/ directory, renders them
@@ -38,7 +39,7 @@ def liftoff(dir: str, show: bool) -> None:
     and grants usage permissions.
 
     Args:
-        dir: Directory containing .sprocketship.yml and procedures/
+        directory: Directory containing .sprocketship.yml and procedures/
         show: If True, print rendered SQL to stdout after deployment
 
     Raises:
@@ -46,7 +47,7 @@ def liftoff(dir: str, show: bool) -> None:
     """
     click.echo(click.style("🚀 Sprocketship lifting off!", fg="white", bold=True))
 
-    config_path = Path(dir) / ".sprocketship.yml"
+    config_path = Path(directory) / ".sprocketship.yml"
     try:
         data = render_file(config_path, return_dict=True)
     except FileNotFoundError:
@@ -74,17 +75,17 @@ def liftoff(dir: str, show: bool) -> None:
         sys.exit(1)
 
 
-    files = list(Path(dir).rglob("*.js"))
+    files = list(Path(directory).rglob("*.js"))
 
     err = False
     for file in files:
-        proc = get_file_config(file, data, dir)
+        proc = get_file_config(file, data, directory)
         try:
             proc_dict = create_javascript_stored_procedure(
-                **proc, **{"project_dir": dir}
+                **proc, **{"project_dir": directory}
             )
-            use_role = proc_dict.get('use_role', data['snowflake']['role'])
-            con.cursor().execute(f"USE ROLE {use_role.upper()}")
+            use_role = proc_dict.get('use_role', data['snowflake'].get('role', 'SYSADMIN'))
+            con.cursor().execute(f"USE ROLE {quote_identifier(use_role.upper())}")
             con.cursor().execute(proc_dict["rendered_file"])
             if "grant_usage" in proc_dict:
                 grant_usage(proc_dict, con)
@@ -108,9 +109,9 @@ def liftoff(dir: str, show: bool) -> None:
 
 
 @main.command()
-@click.argument("dir", default=".")
+@click.argument("directory", default=".")
 @click.option("--target", default="target/sprocketship")
-def build(dir: str, target: str) -> None:
+def build(directory: str, target: str) -> None:
     """Build SQL files locally without deploying to Snowflake.
 
     Discovers all .js files in the procedures/ directory, renders them
@@ -118,8 +119,8 @@ def build(dir: str, target: str) -> None:
     CREATE PROCEDURE SQL statements to the target directory.
 
     Args:
-        dir: Directory containing .sprocketship.yml and procedures/
-        target: Output directory for generated SQL files (relative to dir)
+        directory: Directory containing .sprocketship.yml and procedures/
+        target: Output directory for generated SQL files (relative to directory)
 
     Raises:
         SystemExit: Exits with code 1 if any procedure fails to build
@@ -127,9 +128,9 @@ def build(dir: str, target: str) -> None:
     click.echo(click.style("⚙️ Building sprocketship!", fg="white", bold=True))
 
     # Create target directory for rendered procedures
-    (Path(dir) / target).mkdir(parents=True, exist_ok=True)
+    (Path(directory) / target).mkdir(parents=True, exist_ok=True)
 
-    config_path = Path(dir) / ".sprocketship.yml"
+    config_path = Path(directory) / ".sprocketship.yml"
     try:
         data = render_file(config_path, return_dict=True)
     except FileNotFoundError:
@@ -145,16 +146,16 @@ def build(dir: str, target: str) -> None:
         sys.exit(1)
 
 
-    files = list(Path(dir).rglob("*.js"))
+    files = list(Path(directory).rglob("*.js"))
 
     err = False
     for file in files:
-        proc = get_file_config(file, data, dir)
+        proc = get_file_config(file, data, directory)
         try:
             proc_dict = create_javascript_stored_procedure(
-                **proc, **{"project_dir": dir}
+                **proc, **{"project_dir": directory}
             )
-            output_path = Path(dir) / target / f"{proc['name']}.sql"
+            output_path = Path(directory) / target / f"{proc['name']}.sql"
             output_path.write_text(proc_dict["rendered_file"], encoding="utf-8")
             msg = click.style(f"{proc_dict['name']} ", fg="green", bold=True)
             msg += click.style("successfully built", fg="white", bold=True)
