@@ -348,18 +348,36 @@ procedures:
 git clone https://github.com/nicklausroach/sprocketship.git
 cd sprocketship
 
-# Install in development mode
-pip install -e .
+# Install in development mode with dev dependencies
+pip install -e ".[dev]"
 
-# Run tests
-pytest
-
-# Run specific test file
-pytest tests/test_utils.py
-
-# Run with coverage
-pytest --cov=sprocketship tests/
+# Or use the Makefile
+make install
 ```
+
+### Code Quality Checks
+
+The project includes several tools to maintain code quality:
+
+```bash
+# Run all checks (recommended before committing)
+make check
+
+# Run individual checks
+make test          # Run tests with pytest
+make lint          # Run ruff linter
+make type-check    # Run mypy type checker
+make dead-code     # Detect unused code with vulture
+
+# Format code
+make format        # Auto-format with ruff
+```
+
+**Automated checks:**
+- **pytest** - Comprehensive test suite
+- **mypy** - Static type checking
+- **ruff** - Fast linting and formatting
+- **vulture** - Dead code detection (finds unused functions, variables, imports)
 
 ### Running CLI Directly
 

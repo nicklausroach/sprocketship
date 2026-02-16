@@ -33,6 +33,7 @@ dev = [
     "pytest-cov",
     "pytest-mock",
     "sqlfluff",  # Optional: for thorough SQL linting
+    "vulture>=2.0",  # Dead code detection
 ]
 
 [project.scripts]
@@ -57,3 +58,14 @@ testpaths = ["tests"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
+
+[tool.vulture]
+# Paths to scan for dead code
+paths = ["sprocketship"]
+# Minimum confidence (0-100) for reporting dead code
+# Higher values = fewer false positives
+min_confidence = 80
+# Exclude test files and common patterns
+exclude = ["tests/", "**/__pycache__/"]
+# Report unused imports, functions, classes, variables
+make_whitelist = false
