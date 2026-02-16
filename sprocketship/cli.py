@@ -1,77 +1,97 @@
+"""Command-line interface for sprocketship stored procedure management.
+
+Provides CLI commands for deploying stored procedures to Snowflake (liftoff)
+and building SQL files locally (build).
+"""
+
 import click
-import os
-import itertools
-from snowflake import connector
-from absql import render_file
-from pathlib import Path
+import sys
 import traceback
 
+from snowflake import connector  # type: ignore[import-untyped]
+from absql import render_file  # type: ignore[import-untyped]
+from pathlib import Path
+
 from .utils import (
-    extract_configs,
     create_javascript_stored_procedure,
     grant_usage,
     get_file_config,
+    quote_identifier,
 )
 
 
 @click.group()
 @click.pass_context
-def main(ctx):
+def main(ctx: click.Context) -> None:
+    """Main entry point for the sprocketship CLI."""
     pass
 
 
 @main.command()
-@click.argument("dir", default=".")
+@click.argument("directory", default=".")
 @click.option("--show", is_flag=True)
-def liftoff(dir, show):
-    click.echo(click.style(f"🚀 Sprocketship lifting off!", fg="white", bold=True))
+def liftoff(directory: str, show: bool) -> None:
+    """Deploy stored procedures to Snowflake.
 
-    config_path = os.path.join(dir, ".sprocketship.yml")
+    Discovers all .js files in the procedures/ directory, renders them
+    with configuration from .sprocketship.yml, and executes CREATE PROCEDURE
+    statements in Snowflake. Optionally switches roles before deployment
+    and grants usage permissions.
+
+    Args:
+        directory: Directory containing .sprocketship.yml and procedures/
+        show: If True, print rendered SQL to stdout after deployment
+
+    Raises:
+        SystemExit: Exits with code 1 if any procedure fails to deploy
+    """
+    click.echo(click.style("🚀 Sprocketship lifting off!", fg="white", bold=True))
+
+    config_path = Path(directory) / ".sprocketship.yml"
     try:
         data = render_file(config_path, return_dict=True)
     except FileNotFoundError:
         msg = click.style("Configuration file not found: ", fg="red", bold=True)
         msg += click.style(f"{config_path}", fg="white")
         click.echo(msg, err=True)
-        exit(1)
-    except Exception as e:
+        sys.exit(1)
+    except Exception:
         msg = click.style("Failed to load configuration: ", fg="red", bold=True)
         msg += click.style(f"{config_path}", fg="white")
         click.echo(msg, err=True)
         click.echo(traceback.format_exc(), err=True)
-        exit(1)
+        sys.exit(1)
 
     try:
         con = connector.connect(**data["snowflake"])
     except KeyError:
         msg = click.style("Missing 'snowflake' section in configuration file", fg="red", bold=True)
         click.echo(msg, err=True)
-        exit(1)
+        sys.exit(1)
     except Exception as e:
         msg = click.style("Failed to connect to Snowflake: ", fg="red", bold=True)
         msg += click.style(str(e), fg="white")
         click.echo(msg, err=True)
-        exit(1)
+        sys.exit(1)
 
-    files = list(Path(dir).rglob("*.js"))
+
+    files = list(Path(directory).rglob("*.js"))
 
     err = False
     for file in files:
-        proc = get_file_config(file, data, dir)
+        proc = get_file_config(file, data, directory)
         try:
             proc_dict = create_javascript_stored_procedure(
-                **proc, **{"project_dir": dir}
+                **proc, **{"project_dir": directory}
             )
-            if "use_role" in proc.keys():
-                con.cursor().execute(f"USE ROLE {proc_dict['use_role'].upper()}")
-            else:
-                con.cursor().execute(f"USE ROLE {data['snowflake']['role']}")
+            use_role = proc_dict.get('use_role', data['snowflake'].get('role', 'SYSADMIN'))
+            con.cursor().execute(f"USE ROLE {quote_identifier(use_role.upper())}")
             con.cursor().execute(proc_dict["rendered_file"])
-            if "grant_usage" in proc_dict.keys():
+            if "grant_usage" in proc_dict:
                 grant_usage(proc_dict, con)
 
             msg = click.style(f"{proc_dict['name']} ", fg="green", bold=True)
-            msg += click.style(f"launched into schema ", fg="white", bold=True)
+            msg += click.style("launched into schema ", fg="white", bold=True)
             msg += click.style(
                 f"{proc_dict['database']}.{proc_dict['schema']}", fg="blue", bold=True
             )
@@ -79,57 +99,71 @@ def liftoff(dir, show):
             click.echo(msg)
             if show:
                 click.echo(proc_dict["rendered_file"])
-        except Exception as e:
+        except Exception:
             err = True
             msg = click.style(f"{proc['name']} ", fg="red", bold=True)
-            msg += click.style(f"could not be launched.", fg="white", bold=True)
+            msg += click.style("could not be launched.", fg="white", bold=True)
             click.echo(msg)
             click.echo(traceback.format_exc(), err=True)
-    exit(1 if err else 0)
+    sys.exit(1 if err else 0)
 
 
 @main.command()
-@click.argument("dir", default=".")
+@click.argument("directory", default=".")
 @click.option("--target", default="target/sprocketship")
-def build(dir, target):
-    click.echo(click.style(f"⚙️ Building sprocketship!", fg="white", bold=True))
+def build(directory: str, target: str) -> None:
+    """Build SQL files locally without deploying to Snowflake.
+
+    Discovers all .js files in the procedures/ directory, renders them
+    with configuration from .sprocketship.yml, and writes the resulting
+    CREATE PROCEDURE SQL statements to the target directory.
+
+    Args:
+        directory: Directory containing .sprocketship.yml and procedures/
+        target: Output directory for generated SQL files (relative to directory)
+
+    Raises:
+        SystemExit: Exits with code 1 if any procedure fails to build
+    """
+    click.echo(click.style("⚙️ Building sprocketship!", fg="white", bold=True))
 
     # Create target directory for rendered procedures
-    Path(os.path.join(dir, target)).mkdir(parents=True, exist_ok=True)
+    (Path(directory) / target).mkdir(parents=True, exist_ok=True)
 
-    config_path = os.path.join(dir, ".sprocketship.yml")
+    config_path = Path(directory) / ".sprocketship.yml"
     try:
         data = render_file(config_path, return_dict=True)
     except FileNotFoundError:
         msg = click.style("Configuration file not found: ", fg="red", bold=True)
         msg += click.style(f"{config_path}", fg="white")
         click.echo(msg, err=True)
-        exit(1)
-    except Exception as e:
+        sys.exit(1)
+    except Exception:
         msg = click.style("Failed to load configuration: ", fg="red", bold=True)
         msg += click.style(f"{config_path}", fg="white")
         click.echo(msg, err=True)
         click.echo(traceback.format_exc(), err=True)
-        exit(1)
+        sys.exit(1)
 
-    files = list(Path(dir).rglob("*.js"))
+
+    files = list(Path(directory).rglob("*.js"))
 
     err = False
     for file in files:
-        proc = get_file_config(file, data, dir)
+        proc = get_file_config(file, data, directory)
         try:
             proc_dict = create_javascript_stored_procedure(
-                **proc, **{"project_dir": dir}
+                **proc, **{"project_dir": directory}
             )
-            with open(os.path.join(dir, target, proc["name"] + ".sql"), "w") as f:
-                f.write(proc_dict["rendered_file"])
+            output_path = Path(directory) / target / f"{proc['name']}.sql"
+            output_path.write_text(proc_dict["rendered_file"], encoding="utf-8")
             msg = click.style(f"{proc_dict['name']} ", fg="green", bold=True)
-            msg += click.style(f"successfully built", fg="white", bold=True)
+            msg += click.style("successfully built", fg="white", bold=True)
             click.echo(msg)
-        except Exception as e:
+        except Exception:
             err = True
             msg = click.style(f"{proc['name']} ", fg="red", bold=True)
-            msg += click.style(f"could not be built", fg="white", bold=True)
+            msg += click.style("could not be built", fg="white", bold=True)
             click.echo(msg)
             click.echo(traceback.format_exc(), err=True)
-    exit(1 if err else 0)
+    sys.exit(1 if err else 0)
