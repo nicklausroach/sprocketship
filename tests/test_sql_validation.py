@@ -1,6 +1,5 @@
 """SQL validation tests - ensure generated SQL is syntactically valid"""
 
-import pytest
 from pathlib import Path
 import sqlparse
 from click.testing import CliRunner

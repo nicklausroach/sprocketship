@@ -4,7 +4,7 @@ import pytest
 from pathlib import Path
 from click.testing import CliRunner
 from unittest.mock import patch, MagicMock
-from sprocketship.cli import main, build, liftoff
+from sprocketship.cli import build, liftoff
 import shutil
 
 
@@ -93,7 +93,7 @@ class TestBuildCommand:
             temp_path = Path(temp_dir)
             shutil.copytree(fixture_dir, temp_path / "project")
 
-            result = cli_runner.invoke(build, ["project", "--target", "output"])
+            cli_runner.invoke(build, ["project", "--target", "output"])
 
             # Check create_user procedure got correct config
             create_user_sql = (temp_path / "project/output/create_user.sql").read_text()
@@ -109,7 +109,7 @@ class TestBuildCommand:
             temp_path = Path(temp_dir)
             shutil.copytree(fixture_dir, temp_path / "project")
 
-            result = cli_runner.invoke(build, ["project", "--target", "output"])
+            cli_runner.invoke(build, ["project", "--target", "output"])
 
             # drop_database has frontmatter comment override
             drop_db_sql = (temp_path / "project/output/drop_database.sql").read_text()
@@ -223,7 +223,7 @@ class TestLiftoffCommand:
             temp_path = Path(temp_dir)
             shutil.copytree(fixture_dir, temp_path / "project")
 
-            result = cli_runner.invoke(liftoff, ["project"])
+            cli_runner.invoke(liftoff, ["project"])
 
             # Check that role switching happened
             execute_calls = [call[0][0] for call in mock_cursor.execute.call_args_list]
@@ -245,7 +245,7 @@ class TestLiftoffCommand:
             temp_path = Path(temp_dir)
             shutil.copytree(fixture_dir, temp_path / "project")
 
-            result = cli_runner.invoke(liftoff, ["project"])
+            cli_runner.invoke(liftoff, ["project"])
 
             # Check that GRANT statements were executed
             execute_calls = [call[0][0] for call in mock_cursor.execute.call_args_list]
