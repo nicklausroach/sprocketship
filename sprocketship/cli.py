@@ -17,6 +17,13 @@ from .utils import (
 @click.group()
 @click.pass_context
 def main(ctx):
+    """Sprocketship CLI - Manage Snowflake stored procedures with ease.
+
+    Sprocketship is a Python CLI tool for managing Snowflake stored procedures.
+    It separates procedure code from configuration, uses Jinja2 templating to
+    generate CREATE PROCEDURE statements, and supports hierarchical configuration
+    with file frontmatter overrides.
+    """
     pass
 
 
@@ -24,6 +31,32 @@ def main(ctx):
 @click.argument("dir", default=".")
 @click.option("--show", is_flag=True)
 def liftoff(dir, show):
+    """Deploy Snowflake procedures from a directory.
+
+    Discovers all .js procedure files in the specified directory, renders them
+    with their configuration, and deploys them to Snowflake. Supports role
+    switching per procedure and optional GRANT USAGE statements.
+
+    The command will:
+    1. Load .sprocketship.yml configuration from the directory
+    2. Connect to Snowflake using credentials from the config
+    3. Find all .js files recursively in the directory
+    4. For each procedure:
+       - Merge hierarchical configuration
+       - Switch to the appropriate role if specified
+       - Execute CREATE PROCEDURE statement
+       - Grant usage permissions if configured
+    5. Exit with code 1 if any procedure fails, 0 if all succeed
+
+    Args:
+        dir: Directory containing procedures and .sprocketship.yml
+             (default: current directory)
+        show: If True, print the rendered SQL for each procedure
+
+    Example:
+        sprocketship liftoff ./procedures
+        sprocketship liftoff ./procedures --show
+    """
     click.echo(click.style(f"🚀 Sprocketship lifting off!", fg="white", bold=True))
 
     config_path = os.path.join(dir, ".sprocketship.yml")
@@ -92,6 +125,33 @@ def liftoff(dir, show):
 @click.argument("dir", default=".")
 @click.option("--target", default="target/sprocketship")
 def build(dir, target):
+    """Build procedure SQL files locally without deploying to Snowflake.
+
+    Discovers all .js procedure files in the specified directory, renders them
+    with their configuration, and writes the resulting SQL to local files in
+    the target directory. This is useful for reviewing generated SQL before
+    deployment or for version control of rendered procedures.
+
+    The command will:
+    1. Load .sprocketship.yml configuration from the directory
+    2. Create the target directory if it doesn't exist
+    3. Find all .js files recursively in the directory
+    4. For each procedure:
+       - Merge hierarchical configuration
+       - Render the CREATE PROCEDURE statement
+       - Write the SQL to a .sql file in the target directory
+    5. Exit with code 1 if any procedure fails, 0 if all succeed
+
+    Args:
+        dir: Directory containing procedures and .sprocketship.yml
+             (default: current directory)
+        target: Output directory for rendered SQL files
+                (default: target/sprocketship)
+
+    Example:
+        sprocketship build ./procedures
+        sprocketship build ./procedures --target ./output
+    """
     click.echo(click.style(f"⚙️ Building sprocketship!", fg="white", bold=True))
 
     # Create target directory for rendered procedures
