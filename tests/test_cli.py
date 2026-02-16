@@ -115,6 +115,64 @@ class TestBuildCommand:
             drop_db_sql = (temp_path / "project/output/drop_database.sql").read_text()
             assert "Drops a database - overriding config in frontmatter" in drop_db_sql
 
+    def test_build_only_single_procedure(self, cli_runner, fixture_dir):
+        """Test build command with --only flag for single procedure"""
+        with cli_runner.isolated_filesystem() as temp_dir:
+            temp_path = Path(temp_dir)
+            shutil.copytree(fixture_dir, temp_path / "project")
+
+            result = cli_runner.invoke(build, ["project", "--target", "output", "--only", "create_database"])
+
+            assert result.exit_code == 0
+            output_dir = temp_path / "project/output"
+
+            # Should only build create_database, not all 3 procedures
+            sql_files = list(output_dir.glob("*.sql"))
+            assert len(sql_files) == 1
+            assert (output_dir / "create_database.sql").exists()
+            assert not (output_dir / "drop_database.sql").exists()
+            assert not (output_dir / "create_user.sql").exists()
+
+    def test_build_only_multiple_procedures(self, cli_runner, fixture_dir):
+        """Test build command with multiple --only flags"""
+        with cli_runner.isolated_filesystem() as temp_dir:
+            temp_path = Path(temp_dir)
+            shutil.copytree(fixture_dir, temp_path / "project")
+
+            result = cli_runner.invoke(
+                build,
+                ["project", "--target", "output", "--only", "create_database", "--only", "drop_database"]
+            )
+
+            assert result.exit_code == 0
+            output_dir = temp_path / "project/output"
+
+            # Should only build the two specified procedures
+            sql_files = list(output_dir.glob("*.sql"))
+            assert len(sql_files) == 2
+            assert (output_dir / "create_database.sql").exists()
+            assert (output_dir / "drop_database.sql").exists()
+            assert not (output_dir / "create_user.sql").exists()
+
+    def test_build_only_nonexistent_procedure(self, cli_runner, fixture_dir):
+        """Test build command warns when --only specifies nonexistent procedure"""
+        with cli_runner.isolated_filesystem() as temp_dir:
+            temp_path = Path(temp_dir)
+            shutil.copytree(fixture_dir, temp_path / "project")
+
+            result = cli_runner.invoke(
+                build,
+                ["project", "--target", "output", "--only", "nonexistent"]
+            )
+
+            assert result.exit_code == 0  # Should succeed but with warning
+            assert "Could not find procedure(s): nonexistent" in result.output
+
+            # Should not build any procedures
+            output_dir = temp_path / "project/output"
+            sql_files = list(output_dir.glob("*.sql"))
+            assert len(sql_files) == 0
+
 
 class TestLiftoffCommand:
     """Tests for the liftoff command - mocking Snowflake connection"""
@@ -273,3 +331,77 @@ procedures:
             assert "could not be launched" in result.output
             # At least one should have succeeded
             assert "launched into schema" in result.output
+
+    @patch("sprocketship.cli.connector.connect")
+    def test_liftoff_only_single_procedure(self, mock_connect, cli_runner, fixture_dir):
+        """Test liftoff command with --only flag for single procedure"""
+        mock_conn = MagicMock()
+        mock_cursor = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_conn
+
+        with cli_runner.isolated_filesystem() as temp_dir:
+            temp_path = Path(temp_dir)
+            shutil.copytree(fixture_dir, temp_path / "project")
+
+            result = cli_runner.invoke(liftoff, ["project", "--only", "create_database"])
+
+            assert result.exit_code == 0
+
+            # Should only execute CREATE PROCEDURE once (plus USE ROLE)
+            execute_calls = [call[0][0] for call in mock_cursor.execute.call_args_list]
+            create_calls = [call for call in execute_calls if "CREATE OR REPLACE PROCEDURE" in call]
+
+            # Should only deploy create_database, not all 3 procedures
+            assert len(create_calls) == 1
+            assert "create_database" in create_calls[0]
+
+    @patch("sprocketship.cli.connector.connect")
+    def test_liftoff_only_multiple_procedures(self, mock_connect, cli_runner, fixture_dir):
+        """Test liftoff command with multiple --only flags"""
+        mock_conn = MagicMock()
+        mock_cursor = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_conn
+
+        with cli_runner.isolated_filesystem() as temp_dir:
+            temp_path = Path(temp_dir)
+            shutil.copytree(fixture_dir, temp_path / "project")
+
+            result = cli_runner.invoke(
+                liftoff,
+                ["project", "--only", "create_database", "--only", "drop_database"]
+            )
+
+            assert result.exit_code == 0
+
+            # Should execute CREATE PROCEDURE twice (plus USE ROLE calls)
+            execute_calls = [call[0][0] for call in mock_cursor.execute.call_args_list]
+            create_calls = [call for call in execute_calls if "CREATE OR REPLACE PROCEDURE" in call]
+
+            # Should only deploy the two specified procedures
+            assert len(create_calls) == 2
+            assert any("create_database" in call for call in create_calls)
+            assert any("drop_database" in call for call in create_calls)
+
+    @patch("sprocketship.cli.connector.connect")
+    def test_liftoff_only_nonexistent_procedure(self, mock_connect, cli_runner, fixture_dir):
+        """Test liftoff command warns when --only specifies nonexistent procedure"""
+        mock_conn = MagicMock()
+        mock_cursor = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+        mock_connect.return_value = mock_conn
+
+        with cli_runner.isolated_filesystem() as temp_dir:
+            temp_path = Path(temp_dir)
+            shutil.copytree(fixture_dir, temp_path / "project")
+
+            result = cli_runner.invoke(liftoff, ["project", "--only", "nonexistent"])
+
+            assert result.exit_code == 0  # Should succeed but with warning
+            assert "Could not find procedure(s): nonexistent" in result.output
+
+            # Should not execute any CREATE PROCEDURE statements
+            execute_calls = [call[0][0] for call in mock_cursor.execute.call_args_list]
+            create_calls = [call for call in execute_calls if "CREATE OR REPLACE PROCEDURE" in call]
+            assert len(create_calls) == 0

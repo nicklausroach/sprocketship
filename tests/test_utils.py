@@ -4,10 +4,74 @@ import pytest
 from pathlib import Path
 from sprocketship.utils import (
     ConfigurationError,
+    filter_procedures,
     get_file_config,
     create_javascript_stored_procedure,
     validate_procedure_config,
 )
+
+
+class TestFilterProcedures:
+    """Tests for filter_procedures function"""
+
+    def test_no_filter_returns_all_files(self):
+        """Test that empty filter returns all files"""
+        files = [Path("proc1.js"), Path("proc2.js"), Path("proc3.js")]
+        filtered, not_found = filter_procedures(files, tuple())
+
+        assert filtered == files
+        assert not_found == set()
+
+    def test_filter_single_procedure(self):
+        """Test filtering for a single procedure"""
+        files = [Path("proc1.js"), Path("proc2.js"), Path("proc3.js")]
+        filtered, not_found = filter_procedures(files, ("proc2",))
+
+        assert len(filtered) == 1
+        assert filtered[0] == Path("proc2.js")
+        assert not_found == set()
+
+    def test_filter_multiple_procedures(self):
+        """Test filtering for multiple procedures"""
+        files = [Path("proc1.js"), Path("proc2.js"), Path("proc3.js")]
+        filtered, not_found = filter_procedures(files, ("proc1", "proc3"))
+
+        assert len(filtered) == 2
+        assert Path("proc1.js") in filtered
+        assert Path("proc3.js") in filtered
+        assert Path("proc2.js") not in filtered
+        assert not_found == set()
+
+    def test_nonexistent_procedure_returns_not_found(self):
+        """Test that nonexistent procedures are reported"""
+        files = [Path("proc1.js"), Path("proc2.js")]
+        filtered, not_found = filter_procedures(files, ("proc3",))
+
+        assert len(filtered) == 0
+        assert not_found == {"proc3"}
+
+    def test_mixed_existing_and_nonexistent(self):
+        """Test filtering with mix of existing and nonexistent procedures"""
+        files = [Path("proc1.js"), Path("proc2.js")]
+        filtered, not_found = filter_procedures(files, ("proc1", "proc3", "proc4"))
+
+        assert len(filtered) == 1
+        assert filtered[0] == Path("proc1.js")
+        assert not_found == {"proc3", "proc4"}
+
+    def test_nested_path_filters_by_stem(self):
+        """Test that filtering works with nested paths using filename stem"""
+        files = [
+            Path("admin/create_db.js"),
+            Path("useradmin/create_user.js"),
+            Path("admin/drop_db.js"),
+        ]
+        filtered, not_found = filter_procedures(files, ("create_db", "create_user"))
+
+        assert len(filtered) == 2
+        assert Path("admin/create_db.js") in filtered
+        assert Path("useradmin/create_user.js") in filtered
+        assert not_found == set()
 
 
 class TestGetFileConfig:

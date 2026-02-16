@@ -15,6 +15,7 @@ from pathlib import Path
 from .utils import (
     ConfigurationError,
     create_javascript_stored_procedure,
+    filter_procedures,
     grant_usage,
     get_file_config,
     quote_identifier,
@@ -32,7 +33,8 @@ def main(ctx: click.Context) -> None:
 @main.command()
 @click.argument("directory", default=".")
 @click.option("--show", is_flag=True)
-def liftoff(directory: str, show: bool) -> None:
+@click.option("--only", multiple=True, help="Deploy only specified procedure(s). Can be used multiple times.")
+def liftoff(directory: str, show: bool, only: tuple[str, ...]) -> None:
     """Deploy stored procedures to Snowflake.
 
     Discovers all .js files in the procedures/ directory, renders them
@@ -43,6 +45,7 @@ def liftoff(directory: str, show: bool) -> None:
     Args:
         directory: Directory containing .sprocketship.yml and procedures/
         show: If True, print rendered SQL to stdout after deployment
+        only: Tuple of procedure names to deploy (if empty, deploys all)
 
     Raises:
         SystemExit: Exits with code 1 if any procedure fails to deploy
@@ -123,6 +126,13 @@ Troubleshooting:
 
     files = list(Path(directory).rglob("*.js"))
 
+    # Filter files if --only flag is provided
+    files, not_found = filter_procedures(files, only)
+    if not_found:
+        msg = click.style("Warning: ", fg="yellow", bold=True)
+        msg += click.style(f"Could not find procedure(s): {', '.join(sorted(not_found))}", fg="white")
+        click.echo(msg, err=True)
+
     err = False
     for file in files:
         proc = get_file_config(file, data, directory)
@@ -164,7 +174,8 @@ Troubleshooting:
 @main.command()
 @click.argument("directory", default=".")
 @click.option("--target", default="target/sprocketship")
-def build(directory: str, target: str) -> None:
+@click.option("--only", multiple=True, help="Build only specified procedure(s). Can be used multiple times.")
+def build(directory: str, target: str, only: tuple[str, ...]) -> None:
     """Build SQL files locally without deploying to Snowflake.
 
     Discovers all .js files in the procedures/ directory, renders them
@@ -174,6 +185,7 @@ def build(directory: str, target: str) -> None:
     Args:
         directory: Directory containing .sprocketship.yml and procedures/
         target: Output directory for generated SQL files (relative to directory)
+        only: Tuple of procedure names to build (if empty, builds all)
 
     Raises:
         SystemExit: Exits with code 1 if any procedure fails to build
@@ -217,6 +229,13 @@ Fix: Create a .sprocketship.yml file with required configuration:
 
 
     files = list(Path(directory).rglob("*.js"))
+
+    # Filter files if --only flag is provided
+    files, not_found = filter_procedures(files, only)
+    if not_found:
+        msg = click.style("Warning: ", fg="yellow", bold=True)
+        msg += click.style(f"Could not find procedure(s): {', '.join(sorted(not_found))}", fg="white")
+        click.echo(msg, err=True)
 
     err = False
     for file in files:
