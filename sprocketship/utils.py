@@ -225,33 +225,6 @@ def get_file_config(path: Path, config: dict[str, Any], directory: str) -> dict[
     return file_config
 
 
-def get_full_file_path(proc_config: dict[str, Any]) -> str:
-    """Construct full file path for a procedure from its configuration.
-
-    Args:
-        proc_config: Procedure configuration dictionary containing 'name', 'language', and 'path'
-
-    Returns:
-        Full file path string (e.g., "procedures/sysadmin/create_db.js")
-    """
-    extension_map = {"javascript": ".js", "python": ".py"}
-    file_name = proc_config["name"] + extension_map[proc_config["language"]]
-    return str(Path("procedures") / proc_config["path"] / file_name)
-
-
-def get_file_contents(fpath: str, extra_context: dict[str, Any]) -> dict[str, Any]:
-    """Load and render a file with ABSQL, including frontmatter parsing.
-
-    Args:
-        fpath: Path to the file to render
-        extra_context: Additional context variables for template rendering
-
-    Returns:
-        Dictionary containing rendered content and metadata
-    """
-    return render_file(fpath, return_dict=True, extra_context=extra_context)  # type: ignore[no-any-return]
-
-
 def create_javascript_stored_procedure(**kwargs: Any) -> dict[str, Any]:
     """Generate a complete CREATE PROCEDURE SQL statement for a JavaScript procedure.
 
