@@ -1,0 +1,5 @@
+# Environment variables with credentials
+.env
+
+# Sprocketship build output
+target/
