@@ -34,8 +34,10 @@ Use the `/dignified-python` skill when:
 
 ### Deploy to Snowflake
 ```bash
-sprocketship liftoff [DIR]              # Deploy procedures from DIR (default: current directory)
-sprocketship liftoff [DIR] --show       # Show rendered SQL during deployment
+sprocketship liftoff [DIR]                  # Deploy procedures from DIR (default: current directory)
+sprocketship liftoff [DIR] --show           # Show rendered SQL during deployment
+sprocketship liftoff [DIR] --dry-run        # Preview SQL without connecting to Snowflake
+sprocketship liftoff --only PROC_NAME       # Deploy only specific procedure(s)
 ```
 
 ### Build Locally Without Deploying
