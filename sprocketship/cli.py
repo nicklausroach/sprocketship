@@ -190,7 +190,7 @@ def liftoff(directory: str, show: bool, dry_run: bool, only: tuple[str, ...]) ->
             msg += click.style(
                 f"{proc_dict['database']}.{proc_dict['schema']}", fg="blue", bold=True
             )
-            msg += click.style(f" using role ", fg="white", bold=True)
+            msg += click.style(" using role ", fg="white", bold=True)
             msg += click.style(use_role.upper(), fg="yellow", bold=True)
 
             click.echo(msg)
