@@ -13,6 +13,7 @@ from snowflake import connector  # type: ignore[import-untyped]
 from absql import render_file  # type: ignore[import-untyped]
 from pathlib import Path
 
+from . import __version__
 from .utils import (
     ConfigurationError,
     create_javascript_stored_procedure,
@@ -140,6 +141,7 @@ def _process_procedures(
 
 
 @click.group()
+@click.version_option(__version__, "--version", "-v", prog_name="sprocketship")
 def main() -> None:
     """Main entry point for the sprocketship CLI."""
     pass
