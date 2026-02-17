@@ -1,0 +1,102 @@
+# Sprocketship Configuration File
+# This file defines Snowflake connection settings and procedure configurations
+
+# Snowflake Connection Settings
+# These use !env_var tags to pull values from environment variables
+snowflake:
+  account: !env_var SNOWFLAKE_ACCOUNT      # Your Snowflake account identifier (e.g., xy12345.us-east-1)
+  user: !env_var SNOWFLAKE_USER            # Snowflake username
+  password: !env_var SNOWFLAKE_PASSWORD    # Snowflake password
+  role: !env_var SNOWFLAKE_ROLE            # Default role for connection (can be overridden per procedure)
+  warehouse: !env_var SNOWFLAKE_WAREHOUSE  # Default warehouse for connection
+
+# Procedure Configuration
+# The structure here mirrors your procedures/ directory structure
+procedures:
+  # Cascading defaults (+ prefix applies to all procedures below)
+  +database: !env_var SNOWFLAKE_DATABASE   # Default database for all procedures
+  +schema: !env_var SNOWFLAKE_SCHEMA       # Default schema for all procedures
+  +language: javascript                    # Language for stored procedures (currently only javascript supported)
+  +execute_as: owner                       # Execute procedures as owner or caller
+
+  # Sysadmin procedures
+  # These procedures perform system administration tasks
+  sysadmin:
+    +use_role: sysadmin                    # Switch to sysadmin role before creating these procedures
+
+    create_database:
+      # Configuration defined in frontmatter of create_database.js
+      # Shows: procedure with single argument, frontmatter config pattern
+      pass
+
+    create_warehouse:
+      # Configuration defined in YAML below
+      # Shows: procedure with multiple arguments, some with defaults, YAML config pattern
+      args:
+        - name: warehouse_name
+          type: varchar
+        - name: warehouse_size
+          type: varchar
+          default: "'XSMALL'"              # Default value (note the quotes for string literals)
+        - name: auto_suspend
+          type: number
+          default: 300
+      returns: varchar
+      comment: |
+        Creates a Snowflake warehouse with the specified configuration.
+        Allows customization of size and auto-suspend timeout.
+
+    drop_database:
+      # Configuration defined in YAML below
+      # Shows: procedure with single argument, grant_usage pattern
+      args:
+        - name: database_name
+          type: varchar
+      returns: varchar
+      comment: |
+        Drops a database with the provided name.
+        Use with caution - this is a destructive operation.
+      grant_usage:
+        # Grant access to this procedure to specific roles/users
+        role:
+          - developer_role                 # Allow developer_role to execute this procedure
+        user:
+          - data_engineer                  # Allow specific user to execute this procedure
+
+  # Useradmin procedures
+  # These procedures manage users and roles
+  useradmin:
+    +use_role: useradmin                   # Switch to useradmin role before creating these procedures
+
+    create_role:
+      # Configuration defined in frontmatter of create_role.js
+      # Shows: simple procedure with single argument
+      pass
+
+    grant_role:
+      # Configuration defined in YAML below
+      # Shows: procedure with multiple arguments, no defaults
+      args:
+        - name: role_name
+          type: varchar
+        - name: user_name
+          type: varchar
+      returns: varchar
+      comment: |
+        Grants a role to a user.
+
+    revoke_role:
+      # Configuration defined in YAML below
+      # Shows: procedure with multiple arguments
+      args:
+        - name: role_name
+          type: varchar
+        - name: user_name
+          type: varchar
+      returns: varchar
+      comment: |
+        Revokes a role from a user.
+      grant_usage:
+        # Only allow useradmin role to execute this sensitive procedure
+        role:
+          - useradmin
