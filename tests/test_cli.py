@@ -405,3 +405,78 @@ procedures:
             execute_calls = [call[0][0] for call in mock_cursor.execute.call_args_list]
             create_calls = [call for call in execute_calls if "CREATE OR REPLACE PROCEDURE" in call]
             assert len(create_calls) == 0
+
+    @patch("sprocketship.cli.connector.connect")
+    def test_liftoff_dry_run(self, mock_connect, cli_runner, fixture_dir):
+        """Test liftoff --dry-run previews SQL without connecting to Snowflake"""
+        with cli_runner.isolated_filesystem() as temp_dir:
+            temp_path = Path(temp_dir)
+            shutil.copytree(fixture_dir, temp_path / "project")
+
+            result = cli_runner.invoke(liftoff, ["project", "--dry-run"])
+
+            # Should succeed
+            assert result.exit_code == 0
+
+            # Should show dry-run mode message
+            assert "dry-run mode" in result.output
+            assert "preview only" in result.output
+
+            # Should NOT connect to Snowflake in dry-run mode
+            mock_connect.assert_not_called()
+
+            # Should show SQL in output
+            assert "CREATE OR REPLACE PROCEDURE" in result.output
+
+            # Should show what would be deployed
+            assert "would be deployed to" in result.output
+            assert "admin_db.default_schema" in result.output
+
+            # Should show role information
+            assert "using role" in result.output
+            assert "SYSADMIN" in result.output or "USERADMIN" in result.output
+
+    @patch("sprocketship.cli.connector.connect")
+    def test_liftoff_dry_run_with_only(self, mock_connect, cli_runner, fixture_dir):
+        """Test liftoff --dry-run with --only flag"""
+        with cli_runner.isolated_filesystem() as temp_dir:
+            temp_path = Path(temp_dir)
+            shutil.copytree(fixture_dir, temp_path / "project")
+
+            result = cli_runner.invoke(
+                liftoff,
+                ["project", "--dry-run", "--only", "create_database"]
+            )
+
+            assert result.exit_code == 0
+
+            # Should NOT connect to Snowflake
+            mock_connect.assert_not_called()
+
+            # Should only show create_database, not other procedures
+            assert "create_database" in result.output
+            # Count occurrences of "would be deployed" - should only be 1
+            assert result.output.count("would be deployed to") == 1
+
+    @patch("sprocketship.cli.connector.connect")
+    def test_liftoff_dry_run_shows_grant_usage(self, mock_connect, cli_runner, fixture_dir):
+        """Test liftoff --dry-run shows grant_usage permissions"""
+        with cli_runner.isolated_filesystem() as temp_dir:
+            temp_path = Path(temp_dir)
+            shutil.copytree(fixture_dir, temp_path / "project")
+
+            result = cli_runner.invoke(
+                liftoff,
+                ["project", "--dry-run", "--only", "create_user"]
+            )
+
+            assert result.exit_code == 0
+
+            # Should NOT connect to Snowflake
+            mock_connect.assert_not_called()
+
+            # Should show grant usage information
+            assert "Would grant usage to:" in result.output
+            # The create_user fixture has grant_usage for role: analyst
+            assert "role:" in result.output
+            assert "analyst" in result.output

@@ -148,8 +148,9 @@ def main() -> None:
 @main.command()
 @click.argument("directory", default=".")
 @click.option("--show", is_flag=True)
+@click.option("--dry-run", is_flag=True, help="Preview SQL without connecting to Snowflake")
 @click.option("--only", multiple=True, help="Deploy only specified procedure(s). Can be used multiple times.")
-def liftoff(directory: str, show: bool, only: tuple[str, ...]) -> None:
+def liftoff(directory: str, show: bool, dry_run: bool, only: tuple[str, ...]) -> None:
     """Deploy stored procedures to Snowflake.
 
     Discovers all .js files in the procedures/ directory, renders them
@@ -160,17 +161,57 @@ def liftoff(directory: str, show: bool, only: tuple[str, ...]) -> None:
     Args:
         directory: Directory containing .sprocketship.yml and procedures/
         show: If True, print rendered SQL to stdout after deployment
+        dry_run: If True, preview SQL without connecting to Snowflake
         only: Tuple of procedure names to deploy (if empty, deploys all)
 
     Raises:
         SystemExit: Exits with code 1 if any procedure fails to deploy
     """
-    click.echo(click.style("🚀 Sprocketship lifting off!", fg="white", bold=True))
+    if dry_run:
+        click.echo(click.style("🔍 Sprocketship dry-run mode (preview only)", fg="yellow", bold=True))
+    else:
+        click.echo(click.style("🚀 Sprocketship lifting off!", fg="white", bold=True))
 
     # Load configuration
     data = _load_config(directory)
 
-    # Connect to Snowflake
+    # Discover and filter procedure files
+    files = _discover_and_filter_files(directory, only)
+
+    # In dry-run mode, skip Snowflake connection and just preview SQL
+    if dry_run:
+        # Define dry-run processor
+        def dry_run_processor(proc_dict: dict, proc: dict) -> None:
+            """Preview a single procedure without deploying."""
+            use_role = proc_dict.get('use_role', data['snowflake'].get('role', 'SYSADMIN'))
+
+            msg = click.style(f"{proc_dict['name']} ", fg="cyan", bold=True)
+            msg += click.style("would be deployed to ", fg="white", bold=True)
+            msg += click.style(
+                f"{proc_dict['database']}.{proc_dict['schema']}", fg="blue", bold=True
+            )
+            msg += click.style(f" using role ", fg="white", bold=True)
+            msg += click.style(use_role.upper(), fg="yellow", bold=True)
+
+            click.echo(msg)
+            click.echo()
+            click.echo(proc_dict["rendered_file"])
+            click.echo()
+
+            if "grant_usage" in proc_dict:
+                click.echo(click.style("  Would grant usage to:", fg="white"))
+                for grantee_type, grantees in proc_dict["grant_usage"].items():
+                    for grantee in grantees:
+                        msg = click.style(f"    - {grantee_type}: ", fg="white")
+                        msg += click.style(grantee, fg="yellow")
+                        click.echo(msg)
+                click.echo()
+
+        # Process procedures in dry-run mode
+        err = _process_procedures(directory, data, files, dry_run_processor, "could not be previewed")
+        sys.exit(1 if err else 0)
+
+    # Normal deployment mode - connect to Snowflake
     try:
         con = connector.connect(**data["snowflake"])
     except KeyError:
@@ -209,9 +250,6 @@ Troubleshooting:
 """
         click.echo(click.style(error_msg, fg="red"), err=True)
         sys.exit(1)
-
-    # Discover and filter procedure files
-    files = _discover_and_filter_files(directory, only)
 
     # Define deployment processor
     def deploy_processor(proc_dict: dict, proc: dict) -> None:

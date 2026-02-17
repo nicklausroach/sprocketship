@@ -108,6 +108,8 @@ Deploys all stored procedures from `DIR` (defaults to current directory) to Snow
 
 **Options:**
 - `--show` - Display the rendered SQL for each procedure during deployment
+- `--dry-run` - Preview what would be deployed without connecting to Snowflake or executing SQL
+- `--only PROCEDURE_NAME` - Deploy only specified procedure(s). Can be used multiple times.
 
 **Behavior:**
 - If a procedure fails to deploy, sprocketship will continue processing remaining procedures
@@ -123,6 +125,12 @@ sprocketship liftoff ./my_procedures
 
 # Deploy and show generated SQL
 sprocketship liftoff --show
+
+# Preview what would be deployed without connecting to Snowflake
+sprocketship liftoff --dry-run
+
+# Deploy only specific procedures
+sprocketship liftoff --only create_database --only drop_database
 ```
 
 ### Build Procedures Locally
