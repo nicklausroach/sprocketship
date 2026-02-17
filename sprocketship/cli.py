@@ -7,7 +7,7 @@ and building SQL files locally (build).
 import click
 import sys
 import traceback
-from typing import Callable
+from typing import Any, Callable
 
 from snowflake import connector  # type: ignore[import-untyped]
 from absql import render_file  # type: ignore[import-untyped]
@@ -24,7 +24,7 @@ from .utils import (
 )
 
 
-def _load_config(directory: str) -> dict:
+def _load_config(directory: str) -> dict[str, Any]:
     """Load and validate configuration file.
 
     Args:
@@ -38,7 +38,7 @@ def _load_config(directory: str) -> dict:
     """
     config_path = Path(directory) / ".sprocketship.yml"
     try:
-        return render_file(config_path, return_dict=True)
+        return render_file(config_path, return_dict=True)  # type: ignore[no-any-return]
     except FileNotFoundError:
         error_msg = f"""[E001] Configuration file not found: {config_path}
 
@@ -140,8 +140,7 @@ def _process_procedures(
 
 
 @click.group()
-@click.pass_context
-def main(ctx: click.Context) -> None:
+def main() -> None:
     """Main entry point for the sprocketship CLI."""
     pass
 
